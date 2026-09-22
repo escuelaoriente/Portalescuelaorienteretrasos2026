@@ -100,7 +100,7 @@ main {
 }
 .portal-menu {
   display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-columns:repeat(3,minmax(0,1fr));
   gap:18px;
   margin:20px 0;
 }
@@ -395,6 +395,7 @@ tr:hover td {
   color:var(--gris);
   font-weight:900;
 }
+.summary-grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;margin-bottom:16px}.summary-panel{background:white;border:1px solid var(--linea);border-radius:20px;padding:18px;box-shadow:0 8px 22px rgba(15,79,134,.08)}.summary-panel h3{margin:0 0 12px;color:var(--azul)}.chart{display:grid;grid-template-columns:repeat(12,1fr);align-items:end;gap:8px;height:210px;padding:18px 8px 26px;border-bottom:1px solid var(--linea);background:linear-gradient(180deg,#f8fcff,#fff)}.chart-month{display:flex;flex-direction:column;align-items:center;justify-content:end;height:100%;gap:5px;font-size:11px;color:var(--gris)}.chart-bar{width:100%;max-width:32px;min-height:4px;border-radius:8px 8px 0 0;background:linear-gradient(180deg,#38bdf8,var(--azul));position:relative}.chart-bar span{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font-weight:900;color:var(--azul);font-size:11px}.report-grid{display:grid;grid-template-columns:220px 1fr;gap:12px;align-items:end}.report-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}@media (max-width:900px){.portal-menu{grid-template-columns:1fr}.summary-grid{grid-template-columns:1fr}.report-grid{grid-template-columns:1fr}}
 .cards {
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(315px,1fr));
@@ -673,6 +674,11 @@ tr:hover td {
         <h2>Resumen por curso</h2>
         <p>Consulta rápida de alumnos, inasistencias y atrasos de todos los cursos.</p>
       </div>
+      <div class="portal-card" onclick="abrirModulo('informes')">
+        <div class="icon">📄</div>
+        <h2>Descarga de registros</h2>
+        <p>Genera, descarga o imprime un informe completo por curso o por alumno.</p>
+      </div>
     </div>
 
     <section class="kpis">
@@ -689,17 +695,10 @@ tr:hover td {
       <button class="btn-sec" onclick="volverInicio()">⬅ Volver al portal</button>
       <h2>Resumen por curso</h2>
     </div>
-    <div class="toolbar">
-      <button class="btn-sec" onclick="cargarDatos()">Actualizar</button>
-      <button class="btn-sec" onclick="window.print()">Imprimir</button>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Curso</th><th>Alumnos</th><th>Inasistencias</th><th>Atrasos</th><th>Total registros</th></tr></thead>
-        <tbody id="tablaResumen"></tbody>
-      </table>
-    </div>
+    <div class="summary-grid"><section class="summary-panel"><h3>Evolución mensual de inasistencias</h3><div id="resumenChart" class="chart"></div></section><section class="summary-panel"><h3>Curso seleccionado</h3><select id="resumenCurso" onchange="renderResumen()"></select><div class="kpis" style="grid-template-columns:repeat(2,1fr);margin-top:14px"><div class="kpi"><div class="label">Alumnos</div><div class="num" id="resumenAlumnos">0</div></div><div class="kpi"><div class="label">Inasistencias</div><div class="num" id="resumenInas">0</div></div><div class="kpi"><div class="label">Atrasos</div><div class="num" id="resumenAtrasos">0</div></div><div class="kpi"><div class="label">Registros</div><div class="num" id="resumenTotal">0</div></div></div></section></div><div class="toolbar"><button class="btn-sec" onclick="cargarDatos()">Actualizar</button><button class="btn-sec" onclick="window.print()">Imprimir</button></div><div class="table-wrap"><table><thead><tr><th>Curso</th><th>Alumnos</th><th>Inasistencias</th><th>Atrasos</th><th>Total registros</th></tr></thead><tbody id="tablaResumen"></tbody></table></div>
   </section>
+
+  <section class="view" id="informesView"><div class="top-actions"><button class="btn-sec" onclick="volverInicio()">⬅ Volver al portal</button><h2>Descarga de registros</h2></div><section class="summary-panel"><div class="report-grid"><label>Curso<select id="informeCurso" onchange="actualizarInformeAlumnos()"><option value="todos">Todos los cursos</option></select></label><label>Alumno<select id="informeAlumno" onchange="renderInforme()"><option value="todos">Todos los alumnos</option></select></label></div><div class="report-actions"><button onclick="descargarInformeCSV()">⬇ Descargar CSV</button><button class="btn-sec" onclick="imprimirInforme()">🖨 Imprimir informe</button></div></section><div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Alumno</th><th>Curso</th><th>Inasistencias</th><th>Fechas</th><th>Atrasos</th><th>Fechas</th></tr></thead><tbody id="tablaInforme"></tbody></table></div></section>
 
   <section class="view" id="asistenciaView">
     <div class="top-actions">
@@ -1093,6 +1092,7 @@ function abrirModulo(mod) {
 function mostrarModuloGuardado() {
   document.getElementById("homeView").style.display = moduloActual === "home" ? "block" : "none";
   document.getElementById("resumenView").style.display = moduloActual === "resumen" ? "block" : "none";
+  document.getElementById("informesView").style.display = moduloActual === "informes" ? "block" : "none";
   document.getElementById("asistenciaView").style.display = moduloActual === "asistencia" ? "block" : "none";
   document.getElementById("telefonicoView").style.display = moduloActual === "telefonico" ? "block" : "none";
 }
@@ -1113,6 +1113,9 @@ function llenarSelects() {
       el.innerHTML = options;
     }
   });
+  const resumen=document.getElementById("resumenCurso"); if(resumen) resumen.innerHTML=options;
+  const informe=document.getElementById("informeCurso"); if(informe) informe.innerHTML=`<option value="todos">Todos los cursos</option>${options}`;
+  actualizarInformeAlumnos();
 }
 
 function renderCursos() {
@@ -1137,6 +1140,7 @@ function renderModulo() {
   if (moduloActual === "resumen") {
     renderResumen();
   }
+  if (moduloActual === "informes") renderInforme();
 
   if (moduloActual === "asistencia") {
     renderAsistencia();
@@ -1150,6 +1154,7 @@ function renderModulo() {
 function renderResumen() {
   const tbody = document.getElementById("tablaResumen");
   if (!tbody) return;
+  const cursoElegido=document.getElementById("resumenCurso")?.value||CURSOS[0]; const alumnosElegidos=alumnosActivos().filter(a=>a.curso===cursoElegido); const idsElegidos=new Set(alumnosElegidos.map(a=>String(a.id))); const inasElegidas=estado.inasistencias.filter(x=>idsElegidos.has(String(x.alumnoId||x.alumnoid))); const atrasosElegidos=estado.atrasos.filter(x=>idsElegidos.has(String(x.alumnoId||x.alumnoid))); document.getElementById("resumenAlumnos").textContent=alumnosElegidos.length; document.getElementById("resumenInas").textContent=inasElegidas.length; document.getElementById("resumenAtrasos").textContent=atrasosElegidos.length; document.getElementById("resumenTotal").textContent=inasElegidas.length+atrasosElegidos.length; const meses=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]; const mensual=meses.map((_,i)=>inasElegidas.filter(x=>{const d=new Date(x.fecha);return !Number.isNaN(d.getTime())&&d.getMonth()===i}).length); const max=Math.max(1,...mensual); document.getElementById("resumenChart").innerHTML=mensual.map((n,i)=>`<div class="chart-month"><div class="chart-bar" style="height:${Math.max(4,Math.round(n/max*155))}px"><span>${n}</span></div>${meses[i]}</div>`).join("");
   tbody.innerHTML = CURSOS.map(curso => {
     const alumnos = alumnosActivos().filter(a => a.curso === curso);
     const ids = new Set(alumnos.map(a => String(a.id)));
@@ -1158,6 +1163,12 @@ function renderResumen() {
     return `<tr><td><strong>${escapeHtml(curso)}</strong></td><td>${alumnos.length}</td><td><span class="badge red">${inas}</span></td><td><span class="badge">${atrasos}</span></td><td>${inas + atrasos}</td></tr>`;
   }).join("");
 }
+
+function actualizarInformeAlumnos(){const curso=document.getElementById("informeCurso")?.value||"todos";const select=document.getElementById("informeAlumno");if(!select)return;const lista=alumnosActivos().filter(a=>curso==="todos"||a.curso===curso).sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre)));select.innerHTML=`<option value="todos">Todos los alumnos</option>${lista.map(a=>`<option value="${escapeAttr(a.id)}">${escapeHtml(a.nombre)} · ${escapeHtml(a.curso)}</option>`).join("")}`;renderInforme()}
+function alumnosInforme(){const curso=document.getElementById("informeCurso")?.value||"todos";const alumno=document.getElementById("informeAlumno")?.value||"todos";return alumnosActivos().filter(a=>(curso==="todos"||a.curso===curso)&&(alumno==="todos"||String(a.id)===String(alumno))).sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre)))}
+function renderInforme(){const tbody=document.getElementById("tablaInforme");if(!tbody)return;const lista=alumnosInforme();tbody.innerHTML=lista.length?lista.map(a=>{const ina=fechasPorAlumno(estado.inasistencias,a.id),atr=fechasPorAlumno(estado.atrasos,a.id);return `<tr><td><strong>${escapeHtml(a.nombre)}</strong><div class="small">RUT: ${escapeHtml(a.rut||"Sin registro")}</div></td><td>${escapeHtml(a.curso)}</td><td>${ina.length}</td><td>${ina.join(", ")||"—"}</td><td>${atr.length}</td><td>${atr.join(", ")||"—"}</td></tr>`}).join(""): `<tr><td colspan="6" class="empty">No hay registros para los filtros seleccionados.</td></tr>`}
+function descargarInformeCSV(){const rows=[["Alumno","RUT","Curso","Inasistencias","Fechas inasistencia","Atrasos","Fechas atraso"]];alumnosInforme().forEach(a=>rows.push([a.nombre||"",a.rut||"",a.curso||"",fechasPorAlumno(estado.inasistencias,a.id).length,fechasPorAlumno(estado.inasistencias,a.id).join(" | "),fechasPorAlumno(estado.atrasos,a.id).length,fechasPorAlumno(estado.atrasos,a.id).join(" | ")]));const csv=rows.map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");const link=document.createElement("a");link.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}));link.download="informe-registros.csv";link.click();URL.revokeObjectURL(link.href)}
+function imprimirInforme(){renderInforme();const previo=moduloActual;moduloActual="informes";mostrarModuloGuardado();window.print();moduloActual=previo;mostrarModuloGuardado()}
 
 function fechasPorAlumno(lista, alumnoId) {
   return lista
