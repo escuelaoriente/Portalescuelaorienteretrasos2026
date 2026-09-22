@@ -1034,7 +1034,7 @@ async function postData(payload) {
       curso: payload.curso || "",
       nombre: payload.nombre || "",
       fecha: payload.fecha || "",
-      hora,
+      hora: payload.hora || hora,
       comentario: payload.comentario || "",
       creado,
       registradoPor: payload.registradoPor || ""
@@ -1199,7 +1199,7 @@ function renderResumen() {
 
 function actualizarInformeAlumnos(){const curso=document.getElementById("informeCurso")?.value||"todos";const select=document.getElementById("informeAlumno");if(!select)return;const lista=alumnosActivos().filter(a=>curso==="todos"||a.curso===curso).sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre)));select.innerHTML=`<option value="todos">Todos los alumnos</option>${lista.map(a=>`<option value="${escapeAttr(a.id)}">${escapeHtml(a.nombre)} · ${escapeHtml(a.curso)}</option>`).join("")}`;renderInforme()}
 function alumnosInforme(){const curso=document.getElementById("informeCurso")?.value||"todos";const alumno=document.getElementById("informeAlumno")?.value||"todos";const buscar=normalizar(document.getElementById("informeBuscarNombre")?.value||"");return alumnosActivos().filter(a=>(curso==="todos"||a.curso===curso)&&(alumno==="todos"||String(a.id)===String(alumno))&&(!buscar||normalizar(a.nombre).includes(buscar))).sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre)))}
-function renderInforme(){const tbody=document.getElementById("tablaInforme");if(!tbody)return;const lista=alumnosInforme();tbody.innerHTML=lista.length?lista.map(a=>{const ina=fechasPorAlumno(estado.inasistencias,a.id),atr=fechasPorAlumno(estado.atrasos,a.id);return `<tr><td><strong>${escapeHtml(a.nombre)}</strong><div class="small">RUT: ${escapeHtml(a.rut||"Sin registro")}</div></td><td>${escapeHtml(a.curso)}</td><td>${ina.length}</td><td>${ina.join(", ")||"—"}</td><td>${atr.length}</td><td>${atr.join(", ")||"—"}</td></tr>`}).join(""): `<tr><td colspan="6" class="empty">No hay registros para los filtros seleccionados.</td></tr>`}
+function renderInforme(){const tbody=document.getElementById("tablaInforme");if(!tbody)return;const lista=alumnosInforme();tbody.innerHTML=lista.length?lista.map(a=>{const ina=registrosPorAlumno(estado.inasistencias,a.id),atr=registrosPorAlumno(estado.atrasos,a.id);return `<tr><td><strong>${escapeHtml(a.nombre)}</strong><div class="small">RUT: ${escapeHtml(a.rut||"Sin registro")}</div></td><td>${escapeHtml(a.curso)}</td><td>${ina.length}</td><td>${ina.map(x=>`${escapeHtml(x.fecha)}${x.comentario?" · "+escapeHtml(x.comentario):""}`).join(", ")||"—"}</td><td>${atr.length}</td><td>${atr.map(x=>`${escapeHtml(x.fecha)}${x.hora?" · "+escapeHtml(x.hora):""}${x.comentario?" · "+escapeHtml(x.comentario):""}`).join(", ")||"—"}</td></tr>`}).join(""): `<tr><td colspan="6" class="empty">No hay registros para los filtros seleccionados.</td></tr>`}
 function descargarInformeCSV(){const rows=[["Alumno","RUT","Curso","Inasistencias","Fechas inasistencia","Atrasos","Fechas atraso"]];alumnosInforme().forEach(a=>rows.push([a.nombre||"",a.rut||"",a.curso||"",fechasPorAlumno(estado.inasistencias,a.id).length,fechasPorAlumno(estado.inasistencias,a.id).join(" | "),fechasPorAlumno(estado.atrasos,a.id).length,fechasPorAlumno(estado.atrasos,a.id).join(" | ")]));const csv=rows.map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");const link=document.createElement("a");link.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}));link.download="informe-registros.csv";link.click();URL.revokeObjectURL(link.href)}
 function imprimirInforme(){renderInforme();const previo=moduloActual;moduloActual="informes";mostrarModuloGuardado();window.print();moduloActual=previo;mostrarModuloGuardado()}
 
@@ -1265,7 +1265,7 @@ function renderAsistencia() {
       </td>
       <td><span class="badge red">${inas.length}</span></td>
       <td>
-        <div class="fechas">${inas.map(f => `<span class="fecha">${escapeHtml(f)}</span>`).join("")}</div>
+        <div class="fechas">${registrosPorAlumno(estado.inasistencias,a.id).map(x => `<span class="fecha">${escapeHtml(x.fecha)}${x.comentario ? " · " + escapeHtml(x.comentario) : ""}</span>`).join("")}</div>
         <div class="add-date">
           <input type="date" id="ina_${escapeHtml(a.id)}">
           <button onclick="registrarFecha('${escapeAttr(a.id)}','inasistencia')">Agregar</button>
@@ -1273,7 +1273,7 @@ function renderAsistencia() {
       </td>
       <td><span class="badge green">${atr.length}</span></td>
       <td>
-        <div class="fechas">${atr.map(f => `<span class="fecha">${escapeHtml(f)}</span>`).join("")}</div>
+        <div class="fechas">${registrosPorAlumno(estado.atrasos,a.id).map(x => `<span class="fecha">${escapeHtml(x.fecha)}${x.hora ? " · " + escapeHtml(x.hora) : ""}${x.comentario ? " · " + escapeHtml(x.comentario) : ""}</span>`).join("")}</div>
         <div class="add-date">
           <input type="date" id="atr_${escapeHtml(a.id)}">
           <button onclick="registrarFecha('${escapeAttr(a.id)}','atraso')">Agregar</button>
@@ -1400,6 +1400,9 @@ async function registrarFecha(alumnoId, tipo) {
     return alerta("Seleccione una fecha.", "error");
   }
 
+  const comentario = prompt(tipo === "inasistencia" ? "Motivo de la inasistencia:" : "Motivo del atraso:", "") || "";
+  const hora = tipo === "atraso" ? (prompt("Hora del atraso (HH:MM):", new Date().toLocaleTimeString("es-CL", {hour:"2-digit", minute:"2-digit"})) || "") : "";
+
   const action = tipo === "inasistencia" ? "registrarInasistencia" : "registrarAtraso";
 
   await postData({
@@ -1408,6 +1411,8 @@ async function registrarFecha(alumnoId, tipo) {
     curso:a.curso,
     nombre:a.nombre,
     fecha,
+    hora,
+    comentario,
     registradoPor
   });
 
@@ -1589,6 +1594,7 @@ async function loginPortal() {
     document.getElementById("errorLogin").textContent = err.message;
   }
 }
+function registrosPorAlumno(lista, alumnoId) { return lista.filter(x => String(x.alumnoId || x.alumnoid) === String(alumnoId)); }
 
 function togglePassword(){const el=document.getElementById("loginPassword");const check=document.getElementById("mostrarPassword");if(el) el.type=check&&check.checked?"text":"password"}
 
