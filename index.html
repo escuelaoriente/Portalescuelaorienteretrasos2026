@@ -853,6 +853,7 @@ tr:hover td {
 </div>
 
 <div class="modal-bg" id="modalRegistros"><div class="modal"><div class="top-actions"><h2 id="registrosTitulo">Registros del alumno</h2><button class="btn-sec" onclick="cerrarRegistros()">Cerrar</button></div><div id="listaRegistros" class="registro-list"></div></div></div>
+<div class="modal-bg" id="modalRegistroForm"><div class="modal"><h2 id="registroFormTitulo">Registrar registro</h2><input type="hidden" id="registroFormAlumno"><input type="hidden" id="registroFormTipo"><label>Fecha<input type="date" id="registroFormFecha"></label><label id="registroHoraLabel" style="display:none;margin-top:10px">Hora<input type="time" id="registroFormHora"></label><label style="display:block;margin-top:10px">Motivo o justificación<textarea id="registroFormMotivo" placeholder="Escriba el motivo"></textarea></label><div class="modal-actions"><button class="btn-sec" onclick="cerrarRegistroForm()">Cancelar</button><button onclick="guardarRegistroForm()">Guardar registro</button></div></div></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
@@ -1272,7 +1273,7 @@ function renderAsistencia() {
         <button class="btn-sec" onclick="mostrarRegistros('${escapeAttr(a.id)}')">Mostrar registros</button>
         <div class="add-date">
           <input type="date" id="ina_${escapeHtml(a.id)}">
-          <button class="btn-inas" onclick="registrarFecha('${escapeAttr(a.id)}','inasistencia')">Registrar inasistencia</button>
+          <button class="btn-inas" onclick="abrirFormularioRegistro('${escapeAttr(a.id)}','inasistencia')">Registrar inasistencia</button>
         </div>
       </td>
       <td><span class="badge green">${atr.length}</span></td>
@@ -1280,7 +1281,7 @@ function renderAsistencia() {
         <div class="small">${atr.length} registro(s)</div>
         <div class="add-date">
           <input type="date" id="atr_${escapeHtml(a.id)}">
-          <button class="btn-atraso" onclick="registrarFecha('${escapeAttr(a.id)}','atraso')">Registrar atraso</button>
+          <button class="btn-atraso" onclick="abrirFormularioRegistro('${escapeAttr(a.id)}','atraso')">Registrar atraso</button>
         </div>
       </td>
       <td class="comentario">
@@ -1389,6 +1390,9 @@ async function agregarAlumnoTelefonico() {
   await cargarDatos();
 }
 
+function abrirFormularioRegistro(alumnoId,tipo){const a=buscarAlumno(alumnoId);if(!a)return;document.getElementById("registroFormAlumno").value=alumnoId;document.getElementById("registroFormTipo").value=tipo;document.getElementById("registroFormFecha").value="";document.getElementById("registroFormHora").value="";document.getElementById("registroFormMotivo").value="";document.getElementById("registroFormTitulo").textContent=tipo==="inasistencia"?"Registrar inasistencia":"Registrar atraso";document.getElementById("registroHoraLabel").style.display=tipo==="atraso"?"block":"none";document.getElementById("modalRegistroForm").style.display="flex"}
+function cerrarRegistroForm(){document.getElementById("modalRegistroForm").style.display="none"}
+async function guardarRegistroForm(){const alumnoId=document.getElementById("registroFormAlumno").value,tipo=document.getElementById("registroFormTipo").value,a=buscarAlumno(alumnoId),fecha=document.getElementById("registroFormFecha").value,comentario=document.getElementById("registroFormMotivo").value.trim(),hora=document.getElementById("registroFormHora").value,registradoPor=document.getElementById("registradoPor").value.trim();if(!fecha)return alerta("Seleccione una fecha.","error");const action=tipo==="inasistencia"?"registrarInasistencia":"registrarAtraso";await postData({action,alumnoId,curso:a.curso,nombre:a.nombre,fecha,hora,comentario,registradoPor});cerrarRegistroForm();alerta(tipo==="inasistencia"?"Inasistencia registrada.":"Atraso registrado.");await cargarDatos()}
 async function registrarFecha(alumnoId, tipo) {
   const a = buscarAlumno(alumnoId);
 
