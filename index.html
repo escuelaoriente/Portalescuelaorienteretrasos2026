@@ -74,6 +74,7 @@ h1 {
   display:block;
   font-size:15px;
 }
+.sync-line{display:flex;align-items:center;gap:8px;font-weight:800}.sync-dot{width:12px;height:12px;border-radius:50%;display:inline-block;background:#ef4444;box-shadow:0 0 0 4px rgba(239,68,68,.18)}.sync-dot.ready{background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.18)}.weather{margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,255,255,.24);font-weight:800}.weather small{display:block;opacity:.78;font-weight:600;margin-top:2px}
 main {
   max-width:1380px;
   margin:20px auto;
@@ -395,6 +396,7 @@ tr:hover td {
   color:var(--gris);
   font-weight:900;
 }
+.portal-menu .portal-card{min-height:220px;display:flex;flex-direction:column;justify-content:center}.portal-menu .portal-card:nth-child(4){grid-column:2}
 .summary-grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;margin-bottom:16px}.summary-panel{background:white;border:1px solid var(--linea);border-radius:20px;padding:18px;box-shadow:0 8px 22px rgba(15,79,134,.08)}.summary-panel h3{margin:0 0 12px;color:var(--azul)}.chart{display:grid;grid-template-columns:repeat(12,1fr);align-items:end;gap:8px;height:210px;padding:18px 8px 26px;border-bottom:1px solid var(--linea);background:linear-gradient(180deg,#f8fcff,#fff)}.chart-month{display:flex;flex-direction:column;align-items:center;justify-content:end;height:100%;gap:5px;font-size:11px;color:var(--gris)}.chart-bar{width:100%;max-width:32px;min-height:4px;border-radius:8px 8px 0 0;background:linear-gradient(180deg,#38bdf8,var(--azul));position:relative}.chart-bar span{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font-weight:900;color:var(--azul);font-size:11px}.report-grid{display:grid;grid-template-columns:220px 1fr;gap:12px;align-items:end}.report-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}@media (max-width:900px){.portal-menu{grid-template-columns:1fr}.summary-grid{grid-template-columns:1fr}.report-grid{grid-template-columns:1fr}}
 .cards {
   display:grid;
@@ -647,8 +649,9 @@ tr:hover td {
     </div>
     <div class="status">
       <strong>Base de datos única</strong>
-      Datos sincronizados<br>
+      <div class="sync-line"><span id="syncDot" class="sync-dot"></span><span id="syncText">Sin sincronizar</span></div>
       <span id="lastUpdate">Cargando...</span>
+      <div class="weather" id="weatherBox">🌤️ Consultando tiempo de Quellón...</div>
       <button class="logout-btn" onclick="cerrarSesionPortal()">Cerrar sesión</button>
     </div>
   </div>
@@ -924,6 +927,8 @@ async function siguienteId(nombre) {
 }
 
 async function cargarDatos() {
+  const dot=document.getElementById("syncDot"), syncText=document.getElementById("syncText");
+  if(dot) dot.classList.remove("ready"); if(syncText) syncText.textContent="Sincronizando...";
   try {
     iniciarFirebase();
 
@@ -940,6 +945,7 @@ async function cargarDatos() {
     estado.comentarios = ordenarPorCampo(comentarios, "creado", "nombre").reverse();
 
     document.getElementById("lastUpdate").textContent = "Actualizado: " + new Date().toLocaleTimeString("es-CL");
+    if(dot) dot.classList.add("ready"); if(syncText) syncText.textContent="Datos sincronizados";
 
     llenarSelects();
     renderHome();
@@ -947,8 +953,14 @@ async function cargarDatos() {
     mostrarModuloGuardado();
     renderModulo();
   } catch (err) {
+    if(dot) dot.classList.remove("ready"); if(syncText) syncText.textContent="Sin sincronizar";
     alerta("Error al cargar datos: " + err.message, "error");
   }
+}
+
+async function cargarTiempoQuellon(){
+  const box=document.getElementById("weatherBox"); if(!box) return;
+  try{const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude=-43.1167&longitude=-73.6167&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&timezone=America%2FSantiago");const d=await r.json();const icon={0:"☀️",1:"🌤️",2:"⛅",3:"☁️",45:"🌫️",48:"🌫️",51:"🌦️",53:"🌦️",55:"🌧️",61:"🌧️",63:"🌧️",65:"🌧️",80:"🌦️",81:"🌧️",82:"⛈️",95:"⛈️"}[d.current.weather_code]||"🌤️";box.innerHTML=`${icon} Quellón: ${Math.round(d.current.temperature_2m)}°C <small>Sensación ${Math.round(d.current.apparent_temperature)}°C · Viento ${Math.round(d.current.wind_speed_10m)} km/h</small>`}catch(e){box.innerHTML="🌤️ Quellón · clima no disponible"}
 }
 
 async function postData(payload) {
@@ -1571,6 +1583,7 @@ function iniciarPortal() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  cargarTiempoQuellon();
   const usuario = document.getElementById("loginUsuario");
   const password = document.getElementById("loginPassword");
 
