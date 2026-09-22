@@ -278,6 +278,7 @@ button:hover {
 .btn-danger {
   background:var(--rojo);
 }
+.btn-inas{background:#b42323;color:white}.btn-atraso{background:#16804a;color:white}
 .btn-green {
   background:var(--verde);
 }
@@ -1271,7 +1272,7 @@ function renderAsistencia() {
         <button class="btn-sec" onclick="mostrarRegistros('${escapeAttr(a.id)}')">Mostrar registros</button>
         <div class="add-date">
           <input type="date" id="ina_${escapeHtml(a.id)}">
-          <button onclick="registrarFecha('${escapeAttr(a.id)}','inasistencia')">Agregar</button>
+          <button class="btn-inas" onclick="registrarFecha('${escapeAttr(a.id)}','inasistencia')">Registrar inasistencia</button>
         </div>
       </td>
       <td><span class="badge green">${atr.length}</span></td>
@@ -1279,7 +1280,7 @@ function renderAsistencia() {
         <div class="small">${atr.length} registro(s)</div>
         <div class="add-date">
           <input type="date" id="atr_${escapeHtml(a.id)}">
-          <button onclick="registrarFecha('${escapeAttr(a.id)}','atraso')">Agregar</button>
+          <button class="btn-atraso" onclick="registrarFecha('${escapeAttr(a.id)}','atraso')">Registrar atraso</button>
         </div>
       </td>
       <td class="comentario">
