@@ -584,6 +584,7 @@ tr:hover td {
   justify-content:center;
   padding:20px;
 }
+.registro-list{display:grid;gap:9px;max-height:55vh;overflow:auto}.registro-item{display:grid;grid-template-columns:120px 110px 1fr;gap:10px;align-items:center;padding:11px 12px;border:1px solid var(--linea);border-radius:12px;background:#f7fbff}.registro-item strong{color:var(--azul)}.registro-item .tipo{font-weight:900}.registro-item .tipo.ina{color:#b42323}.registro-item .tipo.atr{color:#12633c}
 .login-layout{width:min(1180px,100%);display:grid;grid-template-columns:1fr 420px;gap:70px;align-items:center}.login-intro{color:white;text-shadow:0 3px 20px rgba(0,0,0,.35)}.login-intro .eyebrow{font-size:15px;letter-spacing:3px;text-transform:uppercase;font-weight:900;color:#f9cf32}.login-intro h1{font-size:clamp(42px,6vw,78px);line-height:1.02;margin:12px 0 18px}.login-intro p{font-size:clamp(19px,2.2vw,28px);line-height:1.35;max-width:650px;margin:0;font-weight:700}.login-intro .login-points{display:flex;gap:10px;flex-wrap:wrap;margin-top:28px}.login-intro .login-points span{padding:9px 13px;border:1px solid rgba(255,255,255,.35);border-radius:999px;background:rgba(255,255,255,.12);font-weight:800}
 .login-box {
   width:100%;
@@ -849,6 +850,8 @@ tr:hover td {
     </div>
   </div>
 </div>
+
+<div class="modal-bg" id="modalRegistros"><div class="modal"><div class="top-actions"><h2 id="registrosTitulo">Registros del alumno</h2><button class="btn-sec" onclick="cerrarRegistros()">Cerrar</button></div><div id="listaRegistros" class="registro-list"></div></div></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
@@ -1265,7 +1268,7 @@ function renderAsistencia() {
       </td>
       <td><span class="badge red">${inas.length}</span></td>
       <td>
-        <div class="fechas">${registrosPorAlumno(estado.inasistencias,a.id).map(x => `<span class="fecha">${escapeHtml(x.fecha)}${x.comentario ? " · " + escapeHtml(x.comentario) : ""}</span>`).join("")}</div>
+        <button class="btn-sec" onclick="mostrarRegistros('${escapeAttr(a.id)}')">Mostrar registros</button>
         <div class="add-date">
           <input type="date" id="ina_${escapeHtml(a.id)}">
           <button onclick="registrarFecha('${escapeAttr(a.id)}','inasistencia')">Agregar</button>
@@ -1273,7 +1276,7 @@ function renderAsistencia() {
       </td>
       <td><span class="badge green">${atr.length}</span></td>
       <td>
-        <div class="fechas">${registrosPorAlumno(estado.atrasos,a.id).map(x => `<span class="fecha">${escapeHtml(x.fecha)}${x.hora ? " · " + escapeHtml(x.hora) : ""}${x.comentario ? " · " + escapeHtml(x.comentario) : ""}</span>`).join("")}</div>
+        <div class="small">${atr.length} registro(s)</div>
         <div class="add-date">
           <input type="date" id="atr_${escapeHtml(a.id)}">
           <button onclick="registrarFecha('${escapeAttr(a.id)}','atraso')">Agregar</button>
@@ -1595,6 +1598,8 @@ async function loginPortal() {
   }
 }
 function registrosPorAlumno(lista, alumnoId) { return lista.filter(x => String(x.alumnoId || x.alumnoid) === String(alumnoId)); }
+function mostrarRegistros(alumnoId){const a=buscarAlumno(alumnoId);if(!a)return;const registros=[...registrosPorAlumno(estado.inasistencias,alumnoId).map(x=>({...x,tipo:"Inasistencia",clase:"ina"})),...registrosPorAlumno(estado.atrasos,alumnoId).map(x=>({...x,tipo:"Atraso",clase:"atr"}))].sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));document.getElementById("registrosTitulo").textContent=`Registros de ${a.nombre}`;document.getElementById("listaRegistros").innerHTML=registros.length?registros.map(x=>`<div class="registro-item"><strong>${escapeHtml(x.fecha||"Sin fecha")}</strong><span class="tipo ${x.clase}">${x.tipo}${x.hora?" · "+escapeHtml(x.hora):""}</span><span>${escapeHtml(x.comentario||"Sin motivo registrado")}</span></div>`).join(""): `<div class="empty">No hay registros para este alumno.</div>`;document.getElementById("modalRegistros").style.display="flex"}
+function cerrarRegistros(){document.getElementById("modalRegistros").style.display="none"}
 
 function togglePassword(){const el=document.getElementById("loginPassword");const check=document.getElementById("mostrarPassword");if(el) el.type=check&&check.checked?"text":"password"}
 
