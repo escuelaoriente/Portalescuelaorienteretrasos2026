@@ -781,7 +781,6 @@ tr:hover td {
                 <th>Fechas Inasistencia</th>
                 <th>Total Atr.</th>
                 <th>Fechas Atraso</th>
-                <th>Observaciones</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -1252,7 +1251,7 @@ function renderAsistencia() {
   const tbody = document.getElementById("tablaA");
 
   if (!filtrados.length) {
-    tbody.innerHTML = `<tr><td colspan="9" class="empty">No hay estudiantes para mostrar.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="empty">No hay estudiantes para mostrar.</td></tr>`;
     return;
   }
 
@@ -1287,11 +1286,6 @@ function renderAsistencia() {
           <input type="date" id="atr_${escapeHtml(a.id)}">
           <button class="btn-atraso" onclick="abrirFormularioRegistro('${escapeAttr(a.id)}','atraso')">Registrar atraso</button>
         </div>
-      </td>
-      <td class="comentario">
-        <textarea id="com_${escapeHtml(a.id)}" placeholder="Escribir observación...">${escapeHtml(ultimo || "")}</textarea>
-        <div class="small">${comments.length} comentario(s)</div>
-        <button class="btn-sec" style="margin-top:7px" onclick="guardarComentario('${escapeAttr(a.id)}')">Guardar</button>
       </td>
       <td>
         <div class="actions">
