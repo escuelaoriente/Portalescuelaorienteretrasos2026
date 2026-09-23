@@ -513,9 +513,9 @@ tr:hover td {
   .attendance-table th:nth-child(3),.attendance-table td:nth-child(3){display:none}
   .attendance-table th:nth-child(2),.attendance-table td:nth-child(2){width:27%}
   .attendance-table th:nth-child(5),.attendance-table td:nth-child(5),.attendance-table th:nth-child(7),.attendance-table td:nth-child(7){width:calc((100% - 188px) / 2)}
-  .attendance-table .add-date{display:flex;flex-wrap:wrap;gap:6px}
-  .attendance-table .add-date input{width:115px;min-width:0}
-  .attendance-table .add-date button{flex:1;min-width:84px}
+  .attendance-table .add-date{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:6px;align-items:stretch}
+  .attendance-table .add-date input{width:100%;min-width:0}
+  .attendance-table .add-date button{width:92px;min-width:92px;flex:none;white-space:normal;line-height:1.1;padding:7px 5px}
 }
 @media(max-width:1100px) {
   .table-wrap{overflow:visible}.table-wrap table{min-width:0;width:100%;table-layout:fixed}.table-wrap th:nth-child(3),.table-wrap td:nth-child(3),.table-wrap th:nth-child(5),.table-wrap td:nth-child(5),.table-wrap th:nth-child(7),.table-wrap td:nth-child(7),.table-wrap th:nth-child(8),.table-wrap td:nth-child(8){display:none}.table-wrap th,.table-wrap td{padding:8px;font-size:12px;overflow-wrap:anywhere}.table-wrap .alumno{min-width:0}.table-wrap .fechas{min-width:0}.table-wrap .comentario textarea{min-width:0}.table-wrap .actions{min-width:0}.table-wrap .add-date input{max-width:105px}.table-wrap .add-date button{font-size:11px;padding:7px 8px;white-space:normal}
