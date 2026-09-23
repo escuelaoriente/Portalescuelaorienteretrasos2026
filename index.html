@@ -781,6 +781,7 @@ tr:hover td {
                 <th>Fechas Inasistencia</th>
                 <th>Total Atr.</th>
                 <th>Fechas Atraso</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody id="tablaA">
@@ -1256,7 +1257,7 @@ function renderAsistencia() {
   const tbody = document.getElementById("tablaA");
 
   if (!filtrados.length) {
-    tbody.innerHTML = `<tr><td colspan="7" class="empty">No hay estudiantes para mostrar.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="empty">No hay estudiantes para mostrar.</td></tr>`;
     return;
   }
 
@@ -1292,6 +1293,7 @@ function renderAsistencia() {
           <button class="btn-atraso" onclick="abrirFormularioRegistro('${escapeAttr(a.id)}','atraso')">Registrar atraso</button>
         </div>
       </td>
+      <td><div class="actions"><button class="btn-sec" onclick="abrirEditar('${escapeAttr(a.id)}')">Editar</button><button class="btn-orange" onclick="moverAlumno('${escapeAttr(a.id)}')">Mover</button><button class="btn-danger" onclick="eliminarAlumno('${escapeAttr(a.id)}')">Eliminar</button></div></td>
     </tr>`;
   }).join("");
 }
