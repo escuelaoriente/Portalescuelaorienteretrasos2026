@@ -1287,6 +1287,7 @@ function renderAsistencia() {
       </td>
       <td><span class="badge green">${atr.length}</span></td>
       <td>
+        <button class="btn-sec" onclick="mostrarRegistros('${escapeAttr(a.id)}')">Mostrar registros</button>
         <div class="small">${atr.length} registro(s)</div>
         <div class="add-date">
           <input type="date" id="atr_${escapeHtml(a.id)}">
