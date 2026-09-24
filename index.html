@@ -78,6 +78,7 @@ h1 {
   min-height:78px;
   overflow:hidden;
 }
+.db-meter{min-width:170px}.db-meter strong{font-size:15px}.db-meter-label{display:flex;justify-content:space-between;font-size:12px;font-weight:800;margin-top:4px}.db-meter-track{height:8px;background:rgba(255,255,255,.28);border-radius:99px;overflow:hidden;margin-top:5px}.db-meter-fill{height:100%;width:0;background:#22c55e;border-radius:99px;transition:width .3s ease}.db-meter-fill.warn{background:#f59e0b}.db-meter-fill.danger{background:#ef4444}
 .status strong {
   display:block;
   font-size:18px;
@@ -691,7 +692,7 @@ tr:hover td {
       </div>
     </div>
     <div class="status">
-      <strong>Base de datos única</strong>
+      <div class="db-meter"><strong>Base de datos única</strong><div class="db-meter-label"><span id="dbUsageText">Calculando uso...</span><span>capacidad estimada</span></div><div class="db-meter-track"><div id="dbUsageFill" class="db-meter-fill"></div></div></div>
       <div class="sync-line"><span id="syncDot" class="sync-dot"></span><span id="syncText">Sin sincronizar</span></div>
       <span id="lastUpdate">Cargando...</span>
       <div class="weather" id="weatherBox">🌤️ Consultando tiempo de Quellón...</div>
@@ -970,6 +971,8 @@ async function siguienteId(nombre) {
   return String(max + 1);
 }
 
+function actualizarMedidorBase(total){const limite=10000;const porcentaje=Math.min(100,Math.round(total/limite*100));const texto=document.getElementById("dbUsageText"),fill=document.getElementById("dbUsageFill");if(texto)texto.textContent=`${total.toLocaleString("es-CL")} registros`;if(fill){fill.style.width=porcentaje+"%";fill.classList.toggle("warn",porcentaje>=70&&porcentaje<90);fill.classList.toggle("danger",porcentaje>=90)}}
+
 async function cargarDatos() {
   const dot=document.getElementById("syncDot"), syncText=document.getElementById("syncText");
   if(dot) dot.classList.remove("ready"); if(syncText) syncText.textContent="Sincronizando...";
@@ -987,6 +990,8 @@ async function cargarDatos() {
     estado.inasistencias = ordenarPorCampo(inasistencias, "fecha", "creado").reverse();
     estado.atrasos = ordenarPorCampo(atrasos, "fecha", "creado").reverse();
     estado.comentarios = ordenarPorCampo(comentarios, "creado", "nombre").reverse();
+
+    actualizarMedidorBase(alumnos.length + inasistencias.length + atrasos.length + comentarios.length);
 
     document.getElementById("lastUpdate").textContent = "Actualizado: " + new Date().toLocaleTimeString("es-CL");
     if(dot) dot.classList.add("ready"); if(syncText) syncText.textContent="Datos sincronizados";
