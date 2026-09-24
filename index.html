@@ -692,7 +692,7 @@ tr:hover td {
       </div>
     </div>
     <div class="status">
-      <div class="db-meter"><strong>Base de datos única</strong><div class="db-meter-label"><span id="dbUsageText">Calculando uso...</span><a href="https://console.firebase.google.com/project/portal-escuela-oriente/usage" target="_blank" rel="noopener" style="color:white;text-decoration:underline">Ver uso real</a></div><div class="db-meter-track"><div id="dbUsageFill" class="db-meter-fill"></div></div></div>
+      <div class="db-meter"><strong>Base de datos única</strong><div class="db-meter-label"><span id="dbUsageText">Calculando uso...</span><a href="https://console.firebase.google.com/project/portal-escuela-oriente/usage" target="_blank" rel="noopener" style="color:white;text-decoration:underline">Ver uso real</a></div><div class="db-meter-track"><div id="dbUsageFill" class="db-meter-fill"></div></div><div id="dbEstimateText" style="font-size:11px;margin-top:4px;opacity:.9">Estimando uso diario...</div></div>
       <div class="sync-line"><span id="syncDot" class="sync-dot"></span><span id="syncText">Sin sincronizar</span></div>
       <span id="lastUpdate">Cargando...</span>
       <div class="weather" id="weatherBox">🌤️ Consultando tiempo de Quellón...</div>
@@ -971,6 +971,8 @@ async function siguienteId(nombre) {
   return String(max + 1);
 }
 
+function actualizarEstimadoDiario(datos,total){const hoy=new Date().toISOString().slice(0,10);const clave="portalUsoFirebase";let u={fecha:hoy,lecturas:0};try{u=JSON.parse(localStorage.getItem(clave)||"null")||u}catch(e){}if(u.fecha!==hoy)u={fecha:hoy,lecturas:0};u.lecturas+=total;try{localStorage.setItem(clave,JSON.stringify(u))}catch(e){}const bytes=new Blob([JSON.stringify(datos)]).size;const mb=(bytes/1048576).toFixed(2);const el=document.getElementById("dbEstimateText");if(el)el.textContent=`Estimado hoy: ${u.lecturas.toLocaleString("es-CL")} lecturas · ${mb} MB de datos cargados`}
+
 function actualizarMedidorBase(total){const texto=document.getElementById("dbUsageText"),fill=document.getElementById("dbUsageFill");if(texto)texto.textContent=`${total.toLocaleString("es-CL")} registros actuales`;if(fill){fill.style.width="0%";fill.classList.remove("warn","danger")}}
 
 async function cargarDatos() {
@@ -992,6 +994,7 @@ async function cargarDatos() {
     estado.comentarios = ordenarPorCampo(comentarios, "creado", "nombre").reverse();
 
     actualizarMedidorBase(alumnos.length + inasistencias.length + atrasos.length + comentarios.length);
+    actualizarEstimadoDiario({alumnos,inasistencias,atrasos,comentarios}, alumnos.length + inasistencias.length + atrasos.length + comentarios.length);
 
     document.getElementById("lastUpdate").textContent = "Actualizado: " + new Date().toLocaleTimeString("es-CL");
     if(dot) dot.classList.add("ready"); if(syncText) syncText.textContent="Datos sincronizados";
