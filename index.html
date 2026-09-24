@@ -426,6 +426,7 @@ tr:hover td {
   gap:14px;
 }
 .phone-card {
+  min-height:76px;
   background:white;
   border:1px solid var(--linea);
   border-left:8px solid var(--azul);
@@ -438,7 +439,7 @@ tr:hover td {
   background:#fff8f8;
 }
 .phone-card h3 {
-  margin:0;
+  margin:0 0 6px;
   color:var(--azul);
   font-size:18px;
   line-height:1.25;
@@ -1345,7 +1346,7 @@ function renderTelefonico() {
     const alerta = esAlertaTelefonica(a);
     return `<article class="phone-card ${alerta ? "alert" : ""} ${a.prohibicionRetiro ? "retiro-prohibido" : ""}">
       <h3>${escapeHtml(a.nombre || "")}</h3>
-      <button onclick="abrirEditar('${escapeAttr(a.id)}')">Ver datos</button>
+      <button onclick="abrirEditar('${escapeAttr(a.id)}')">Ver</button>
     </article>`;
   }).join("");
 }
