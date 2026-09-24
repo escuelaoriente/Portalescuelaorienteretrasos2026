@@ -400,7 +400,7 @@ tr:hover td {
   padding:7px 9px;
   font-size:13px;
 }
-.btn-ver{padding:5px 7px!important;font-size:11px!important;line-height:1!important}
+.btn-ver{padding:5px 7px!important;font-size:11px!important;line-height:1!important}.retiro-label input{width:20px;height:20px;accent-color:#b42323}.retiro-nombres{grid-column:1 / -1;min-height:58px!important}
 .comentario textarea {
   min-height:76px;
   resize:vertical;
@@ -868,8 +868,8 @@ tr:hover td {
       <input id="editSuplentes" placeholder="Suplentes separados por /">
       <select id="editCurso"></select>
       <textarea id="editComentarioTelefono" placeholder="Comentario telefónico u observación importante"></textarea>
-      <label style="display:flex;align-items:center;gap:8px;font-weight:800;color:#b42323"><input id="editProhibicionRetiro" type="checkbox"> Prohibición de retiro</label>
-      <input id="editNombreProhibicion" placeholder="Nombre del apoderado que no puede retirar">
+      <label class="retiro-label" style="display:flex;align-items:center;gap:6px;font-weight:900;color:#b42323"><input id="editProhibicionRetiro" type="checkbox"> Prohibición de retiro</label>
+      <textarea id="editNombreProhibicion" class="retiro-nombres" placeholder="Nombres autorizados para bloquear (uno por línea)"></textarea>
     </div>
     <div class="modal-actions">
       <button class="btn-sec" onclick="cerrarEditar()">Cancelar</button>
