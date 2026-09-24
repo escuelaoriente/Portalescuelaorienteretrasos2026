@@ -1303,7 +1303,6 @@ function renderAsistencia() {
       <td><span class="badge green">${atr.length}</span></td>
       <td>
         <button class="btn-sec" onclick="mostrarRegistros('${escapeAttr(a.id)}','atraso')">Mostrar registros</button>
-        <div class="small">${atr.length} registro(s)</div>
         <div class="add-date">
           <input type="date" id="atr_${escapeHtml(a.id)}">
           <button class="btn-atraso" onclick="abrirFormularioRegistro('${escapeAttr(a.id)}','atraso')">⏱</button>
