@@ -513,7 +513,7 @@ tr:hover td {
   .attendance-table th:nth-child(3),.attendance-table td:nth-child(3){display:none}
   .attendance-table th:nth-child(2),.attendance-table td:nth-child(2){width:27%}
   .attendance-table th:nth-child(5),.attendance-table td:nth-child(5),.attendance-table th:nth-child(7),.attendance-table td:nth-child(7){width:calc((100% - 188px) / 2)}
-  .attendance-table .add-date{display:grid;grid-template-columns:minmax(0,1fr) 42px 44px;gap:6px;align-items:start}
+  .attendance-table .add-date{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:6px;align-items:start}
   .attendance-table .add-date input{width:100%;min-width:0;height:42px;box-sizing:border-box}
   .attendance-table .add-date button{width:44px;min-width:44px;height:42px;flex:none;white-space:normal;line-height:1.1;padding:5px;box-sizing:border-box}
 }
@@ -1297,7 +1297,6 @@ function renderAsistencia() {
         <button class="btn-sec" onclick="mostrarRegistros('${escapeAttr(a.id)}','inasistencia')">Mostrar registros</button>
         <div class="add-date">
           <input type="date" id="ina_${escapeHtml(a.id)}">
-          <button class="btn-sec calendar-btn" title="Elegir fecha" onclick="abrirCalendario('ina_${escapeAttr(a.id)}')">📅</button>
           <button class="btn-inas" onclick="abrirFormularioRegistro('${escapeAttr(a.id)}','inasistencia')">➕</button>
         </div>
       </td>
@@ -1307,7 +1306,6 @@ function renderAsistencia() {
         <div class="small">${atr.length} registro(s)</div>
         <div class="add-date">
           <input type="date" id="atr_${escapeHtml(a.id)}">
-          <button class="btn-sec calendar-btn" title="Elegir fecha" onclick="abrirCalendario('atr_${escapeAttr(a.id)}')">📅</button>
           <button class="btn-atraso" onclick="abrirFormularioRegistro('${escapeAttr(a.id)}','atraso')">⏱</button>
         </div>
       </td>
