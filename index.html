@@ -742,7 +742,7 @@ tr:hover td {
       <button class="btn-sec" onclick="volverInicio()">⬅ Volver al portal</button>
       <h2>Resumen por curso</h2>
     </div>
-    <div class="summary-grid"><section class="summary-panel"><h3>Evolución mensual de inasistencias</h3><div id="resumenChart" class="chart"></div></section><section class="summary-panel"><h3>Curso seleccionado</h3><select id="resumenCurso" onchange="renderResumen()"></select><input id="resumenBuscarAlumno" type="search" placeholder="Buscar alumno por nombre..." oninput="renderResumen()" style="margin-top:10px"><label style="display:block;margin-top:10px;font-weight:900;color:var(--gris)">Buscar fecha de inasistencia<input id="resumenFecha" type="date" onchange="renderResumen()" style="margin-top:5px"></label><div class="kpis" style="grid-template-columns:repeat(2,1fr);margin-top:14px"><div class="kpi"><div class="label">Alumnos</div><div class="num" id="resumenAlumnos">0</div></div><div class="kpi"><div class="label">Inasistencias</div><div class="num" id="resumenInas">0</div></div><div class="kpi"><div class="kpi-label label">Atrasos</div><div class="num" id="resumenAtrasos">0</div></div><div class="kpi"><div class="label">Registros</div><div class="num" id="resumenTotal">0</div></div></div></section></div><div class="toolbar"><button class="btn-sec" onclick="cargarDatos()">Actualizar</button><button class="btn-sec" onclick="window.print()">Imprimir</button></div><div class="table-wrap"><table><thead><tr><th>Curso</th><th>Alumnos</th><th>Inasistencias</th><th>Atrasos</th><th>Total registros</th></tr></thead><tbody id="tablaResumen"></tbody></table></div><div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Alumno</th><th>Curso</th><th>Fecha de inasistencia</th><th>RUT</th></tr></thead><tbody id="detalleResumen"></tbody></table></div>
+    <div class="summary-grid"><section class="summary-panel"><h3>Evolución mensual de inasistencias</h3><div id="resumenChart" class="chart"></div></section><section class="summary-panel"><h3>Curso seleccionado</h3><select id="resumenCurso" onchange="renderResumen()"></select><input id="resumenBuscarAlumno" type="search" placeholder="Buscar alumno por nombre..." oninput="renderResumen()" style="margin-top:10px"><label style="display:block;margin-top:10px;font-weight:900;color:var(--gris)">Buscar fecha de inasistencia<input id="resumenFecha" type="date" onchange="renderResumen()" style="margin-top:5px"></label><div class="kpis" style="grid-template-columns:repeat(2,1fr);margin-top:14px"><div class="kpi"><div class="label">Alumnos</div><div class="num" id="resumenAlumnos">0</div></div><div class="kpi"><div class="label">Inasistencias</div><div class="num" id="resumenInas">0</div></div><div class="kpi"><div class="kpi-label label">Atrasos</div><div class="num" id="resumenAtrasos">0</div></div><div class="kpi"><div class="label">Registros</div><div class="num" id="resumenTotal">0</div></div></div></section></div><div class="toolbar"><button class="btn-sec" onclick="cargarDatos(true)">Actualizar</button><button class="btn-sec" onclick="window.print()">Imprimir</button></div><div class="table-wrap"><table><thead><tr><th>Curso</th><th>Alumnos</th><th>Inasistencias</th><th>Atrasos</th><th>Total registros</th></tr></thead><tbody id="tablaResumen"></tbody></table></div><div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Alumno</th><th>Curso</th><th>Fecha de inasistencia</th><th>RUT</th></tr></thead><tbody id="detalleResumen"></tbody></table></div>
   </section>
 
   <section class="view" id="informesView"><div class="top-actions"><button class="btn-sec" onclick="volverInicio()">⬅ Volver al portal</button><h2>Descarga de registros</h2></div><section class="summary-panel"><div class="report-grid"><label>Curso<select id="informeCurso" onchange="actualizarInformeAlumnos()"><option value="todos">Todos los cursos</option></select></label><label>Alumno<select id="informeAlumno" onchange="renderInforme()"><option value="todos">Todos los alumnos</option></select></label><label style="grid-column:1 / -1">Buscar por nombre<input id="informeBuscarNombre" type="search" placeholder="Escriba el nombre del alumno..." oninput="renderInforme()"></label></div><div class="report-actions"><button onclick="descargarInformeCSV()">⬇ Descargar CSV</button><button class="btn-sec" onclick="imprimirInforme()">🖨 Imprimir informe</button></div></section><div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Alumno</th><th>Curso</th><th>Inasistencias</th><th>Fechas</th><th>Atrasos</th><th>Fechas</th></tr></thead><tbody id="tablaInforme"></tbody></table></div></section>
@@ -772,7 +772,7 @@ tr:hover td {
           <input id="buscarA" type="search" placeholder="Buscar alumno...">
           <input id="registradoPor" placeholder="Registrado por">
           <button class="btn-green" onclick="toggleAgregar()">+ Agregar alumno</button>
-          <button class="btn-sec" onclick="cargarDatos()">Actualizar</button>
+          <button class="btn-sec" onclick="cargarDatos(true)">Actualizar</button>
           <button class="btn-sec" onclick="window.print()">Imprimir</button>
         </div>
 
@@ -829,7 +829,7 @@ tr:hover td {
             <option value="alertas">Solo con alerta</option>
           </select>
           <button class="btn-green" onclick="toggleAgregarTelefonico()">+ Agregar alumno</button>
-          <button class="btn-sec" onclick="cargarDatos()">Actualizar</button>
+          <button class="btn-sec" onclick="cargarDatos(true)">Actualizar</button>
           <button class="btn-sec" onclick="exportarTelefonicoCSV()">Exportar CSV</button>
         </div>
 
@@ -975,7 +975,11 @@ function actualizarEstimadoDiario(datos,total){const hoy=new Date().toISOString(
 
 function actualizarMedidorBase(total){const texto=document.getElementById("dbUsageText"),fill=document.getElementById("dbUsageFill");if(texto)texto.textContent=`${total.toLocaleString("es-CL")} registros actuales`;if(fill){fill.style.width="0%";fill.classList.remove("warn","danger")}}
 
-async function cargarDatos() {
+async function cargarDatos(force=false) {
+  if (!force && estado.alumnos.length) {
+    llenarSelects(); renderHome(); renderCursos(); mostrarModuloGuardado(); renderModulo();
+    return;
+  }
   const dot=document.getElementById("syncDot"), syncText=document.getElementById("syncText");
   if(dot) dot.classList.remove("ready"); if(syncText) syncText.textContent="Sincronizando...";
   try {
@@ -1383,7 +1387,7 @@ async function agregarAlumno() {
   await postData(payload);
   cursoActual = payload.curso;
   alerta("Alumno agregado.");
-  await cargarDatos();
+  await cargarDatos(true);
 }
 
 async function agregarAlumnoTelefonico() {
@@ -1405,14 +1409,14 @@ async function agregarAlumnoTelefonico() {
   await postData(payload);
   cursoActual = payload.curso;
   alerta("Alumno agregado.");
-  await cargarDatos();
+  await cargarDatos(true);
 }
 
 function abrirCalendario(id){const el=document.getElementById(id);if(!el)return;if(typeof el.showPicker==="function")el.showPicker();else el.focus()}
 
 function abrirFormularioRegistro(alumnoId,tipo){const a=buscarAlumno(alumnoId);if(!a)return;document.getElementById("registroFormAlumno").value=alumnoId;document.getElementById("registroFormTipo").value=tipo;document.getElementById("registroFormFecha").value="";document.getElementById("registroFormHora").value="";document.getElementById("registroFormMotivo").value="";document.getElementById("registroFormTitulo").textContent=tipo==="inasistencia"?"Registrar inasistencia":"Registrar atraso";document.getElementById("registroHoraLabel").style.display=tipo==="atraso"?"block":"none";document.getElementById("modalRegistroForm").style.display="flex"}
 function cerrarRegistroForm(){document.getElementById("modalRegistroForm").style.display="none"}
-async function guardarRegistroForm(){const alumnoId=document.getElementById("registroFormAlumno").value,tipo=document.getElementById("registroFormTipo").value,a=buscarAlumno(alumnoId),fecha=document.getElementById("registroFormFecha").value,comentario=document.getElementById("registroFormMotivo").value.trim(),hora=document.getElementById("registroFormHora").value,registradoPor=document.getElementById("registradoPor").value.trim();if(!fecha)return alerta("Seleccione una fecha.","error");const action=tipo==="inasistencia"?"registrarInasistencia":"registrarAtraso";await postData({action,alumnoId,curso:a.curso,nombre:a.nombre,fecha,hora,comentario,registradoPor});cerrarRegistroForm();alerta(tipo==="inasistencia"?"Inasistencia registrada.":"Atraso registrado.");await cargarDatos()}
+async function guardarRegistroForm(){const alumnoId=document.getElementById("registroFormAlumno").value,tipo=document.getElementById("registroFormTipo").value,a=buscarAlumno(alumnoId),fecha=document.getElementById("registroFormFecha").value,comentario=document.getElementById("registroFormMotivo").value.trim(),hora=document.getElementById("registroFormHora").value,registradoPor=document.getElementById("registradoPor").value.trim();if(!fecha)return alerta("Seleccione una fecha.","error");const action=tipo==="inasistencia"?"registrarInasistencia":"registrarAtraso";await postData({action,alumnoId,curso:a.curso,nombre:a.nombre,fecha,hora,comentario,registradoPor});cerrarRegistroForm();alerta(tipo==="inasistencia"?"Inasistencia registrada.":"Atraso registrado.");await cargarDatos(true)}
 async function registrarFecha(alumnoId, tipo) {
   const a = buscarAlumno(alumnoId);
 
@@ -1445,7 +1449,7 @@ async function registrarFecha(alumnoId, tipo) {
   });
 
   alerta(tipo === "inasistencia" ? "Inasistencia registrada." : "Atraso registrado.");
-  await cargarDatos();
+  await cargarDatos(true);
 }
 
 async function guardarComentario(alumnoId) {
@@ -1467,7 +1471,7 @@ async function guardarComentario(alumnoId) {
   });
 
   alerta("Comentario guardado.");
-  await cargarDatos();
+  await cargarDatos(true);
 }
 
 async function guardarComentarioTelefono(alumnoId) {
@@ -1480,7 +1484,7 @@ async function guardarComentarioTelefono(alumnoId) {
   });
 
   alerta("Comentario telefónico guardado.");
-  await cargarDatos();
+  await cargarDatos(true);
 }
 
 function abrirEditar(alumnoId) {
@@ -1528,7 +1532,7 @@ async function guardarEdicion() {
   cursoActual = payload.curso;
   cerrarEditar();
   alerta("Alumno editado.");
-  await cargarDatos();
+  await cargarDatos(true);
 }
 
 async function moverAlumno(alumnoId) {
@@ -1550,7 +1554,7 @@ async function moverAlumno(alumnoId) {
 
   cursoActual = nuevoCurso;
   alerta("Alumno movido.");
-  await cargarDatos();
+  await cargarDatos(true);
 }
 
 async function eliminarAlumno(alumnoId) {
@@ -1570,7 +1574,7 @@ async function eliminarAlumno(alumnoId) {
   });
 
   alerta("Alumno eliminado.");
-  await cargarDatos();
+  await cargarDatos(true);
 }
 
 function exportarTelefonicoCSV() {
@@ -1624,7 +1628,7 @@ async function loginPortal() {
 }
 function registrosPorAlumno(lista, alumnoId) { return lista.filter(x => String(x.alumnoId || x.alumnoid) === String(alumnoId)); }
 function mostrarRegistros(alumnoId,filtroTipo){const a=buscarAlumno(alumnoId);if(!a)return;let registros=filtroTipo==="inasistencia"?registrosPorAlumno(estado.inasistencias,alumnoId).map(x=>({...x,tipo:"Inasistencia",clase:"ina"})):filtroTipo==="atraso"?registrosPorAlumno(estado.atrasos,alumnoId).map(x=>({...x,tipo:"Atraso",clase:"atr"})):[];registros.sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));document.getElementById("registrosTitulo").textContent=`${filtroTipo==="atraso"?"Atrasos":"Inasistencias"} de ${a.nombre}`;const alerta=filtroTipo==="inasistencia"&&esAlertaTelefonica(a)?`<div class="alert-badge">⚠ Alerta de retiro: ${escapeHtml(textoAlertaTelefonica(a))}</div>`:"";document.getElementById("listaRegistros").innerHTML=alerta+(registros.length?registros.map(x=>`<div class="registro-item"><strong>${escapeHtml(x.fecha||"Sin fecha")}</strong><span class="tipo ${x.clase}">${x.tipo}${x.hora?" · "+escapeHtml(x.hora):""}</span><span>${escapeHtml(x.comentario||"Sin motivo registrado")}</span><button class="btn-danger" onclick="borrarRegistro('${escapeAttr(x.id)}','${x.tipo}','${escapeAttr(alumnoId)}','${filtroTipo}')">Borrar</button></div>`).join(""): `<div class="empty">No hay ${filtroTipo==="atraso"?"atrasos":"inasistencias"} para este alumno.</div>`);document.getElementById("modalRegistros").style.display="flex"}
-async function borrarRegistro(id,tipo,alumnoId,filtroTipo){if(!confirm("¿Borrar este registro?"))return;await postData({action:"borrarRegistro",id,tipo});alerta("Registro borrado.");await cargarDatos();mostrarRegistros(alumnoId,filtroTipo)}
+async function borrarRegistro(id,tipo,alumnoId,filtroTipo){if(!confirm("¿Borrar este registro?"))return;await postData({action:"borrarRegistro",id,tipo});alerta("Registro borrado.");await cargarDatos(true);mostrarRegistros(alumnoId,filtroTipo)}
 function cerrarRegistros(){document.getElementById("modalRegistros").style.display="none"}
 
 function togglePassword(){const el=document.getElementById("loginPassword");const check=document.getElementById("mostrarPassword");if(el) el.type=check&&check.checked?"text":"password"}
