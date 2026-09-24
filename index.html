@@ -1048,7 +1048,9 @@ async function postData(payload) {
       activo: "SI",
       fechaRegistro: creado,
       suplentes: payload.suplentes || "",
-      comentarioTelefono: payload.comentarioTelefono || ""
+      comentarioTelefono: payload.comentarioTelefono || "",
+      prohibicionRetiro: !!payload.prohibicionRetiro,
+      nombreProhibicion: payload.nombreProhibicion || ""
     });
     return { ok:true };
   }
@@ -1120,6 +1122,8 @@ async function postData(payload) {
       telefono: payload.telefono || "",
       suplentes: payload.suplentes || "",
       comentarioTelefono: payload.comentarioTelefono || "",
+      prohibicionRetiro: !!payload.prohibicionRetiro,
+      nombreProhibicion: payload.nombreProhibicion || "",
       curso: payload.curso || ""
     });
     return { ok:true };
