@@ -60,6 +60,7 @@ h1 {
   opacity:.95;
   font-size:clamp(14px,2vw,18px);
 }
+.header-summary{margin-left:auto;color:white;text-align:right;font-weight:800;line-height:1.45}.header-summary .summary-date{font-size:16px}.header-summary .summary-counts{font-size:14px}.header-summary .summary-alert{color:#ffd1d1;font-size:13px}
 .status {
   background:rgba(255,255,255,.14);
   border:1px solid rgba(255,255,255,.28);
@@ -692,6 +693,7 @@ tr:hover td {
         <p class="sub">Registro telefónico · Atrasos e inasistencias</p>
       </div>
     </div>
+    <div class="header-summary" id="headerSummary"></div>
     <div class="status">
       <div class="db-meter"><strong>Base de datos única</strong><div class="db-meter-label"><span id="dbUsageText">Calculando uso...</span><span>Uso estimado</span></div><div class="db-meter-track"><div id="dbUsageFill" class="db-meter-fill"></div></div><div id="dbEstimateText" style="font-size:11px;margin-top:4px;opacity:.9">Estimando uso diario...</div></div>
       <div class="sync-line"><span id="syncDot" class="sync-dot"></span><span id="syncText">Sin sincronizar</span></div>
@@ -975,6 +977,8 @@ async function siguienteId(nombre) {
   return String(max + 1);
 }
 
+function actualizarResumenEncabezado(){const el=document.getElementById("headerSummary");if(!el)return;const hoy=new Date();const fecha=hoy.toLocaleDateString("es-CL",{weekday:"long",day:"numeric",month:"long",year:"numeric"});const iso=hoy.toISOString().slice(0,10);const ina=estado.inasistencias.filter(x=>x.fecha===iso).length;const atr=estado.atrasos.filter(x=>x.fecha===iso).length;const prohib=estado.alumnos.filter(x=>x.prohibicionRetiro).length;el.innerHTML=`<div class="summary-date">${fecha.charAt(0).toUpperCase()+fecha.slice(1)}</div><div class="summary-counts">${estado.alumnos.length} alumnos · ${ina} inasistencias · ${atr} atrasos</div><div class="summary-alert">⚠ ${prohib} alumnos con prohibición de retiro</div>`}
+
 function actualizarEstimadoDiario(datos,total){const hoy=new Date().toISOString().slice(0,10);const clave="portalUsoFirebase";let u={fecha:hoy,lecturas:0};try{u=JSON.parse(localStorage.getItem(clave)||"null")||u}catch(e){}if(u.fecha!==hoy)u={fecha:hoy,lecturas:0};u.lecturas+=total;try{localStorage.setItem(clave,JSON.stringify(u))}catch(e){}const bytes=new Blob([JSON.stringify(datos)]).size;const mb=(bytes/1048576).toFixed(2);const el=document.getElementById("dbEstimateText");if(el)el.textContent=`Estimado hoy: ${u.lecturas.toLocaleString("es-CL")} lecturas · ${mb} MB de datos cargados`}
 
 function actualizarMedidorBase(total){const texto=document.getElementById("dbUsageText"),fill=document.getElementById("dbUsageFill");if(texto)texto.textContent=`${total.toLocaleString("es-CL")} registros actuales`;if(fill){fill.style.width="0%";fill.classList.remove("warn","danger")}}
@@ -1002,6 +1006,7 @@ async function cargarDatos(force=false) {
     estado.comentarios = ordenarPorCampo(comentarios, "creado", "nombre").reverse();
 
     actualizarMedidorBase(alumnos.length + inasistencias.length + atrasos.length + comentarios.length);
+    actualizarResumenEncabezado();
     actualizarEstimadoDiario({alumnos,inasistencias,atrasos,comentarios}, alumnos.length + inasistencias.length + atrasos.length + comentarios.length);
 
     document.getElementById("lastUpdate").textContent = "Actualizado: " + new Date().toLocaleTimeString("es-CL");
