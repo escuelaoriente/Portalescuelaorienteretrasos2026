@@ -421,12 +421,16 @@ tr:hover td {
 .portal-menu .portal-card{min-height:190px;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden}.portal-menu .portal-card:nth-child(2){border-left-color:#38bdf8}.portal-menu .portal-card:nth-child(3){border-left-color:#22c55e}.portal-menu .portal-card:nth-child(4){border-left-color:#a78bfa}.portal-menu .portal-card::after{content:"→";position:absolute;right:22px;bottom:18px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#eaf3f9;color:var(--azul);font-size:20px;font-weight:900;transition:.15s}.portal-menu .portal-card:hover::after{background:var(--azul);color:white;transform:translateX(3px)}
 .summary-grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;margin-bottom:16px}.summary-panel{background:white;border:1px solid var(--linea);border-radius:20px;padding:18px;box-shadow:0 8px 22px rgba(15,79,134,.08)}.summary-panel h3{margin:0 0 12px;color:var(--azul)}.chart{display:grid;grid-template-columns:repeat(12,1fr);align-items:end;gap:8px;height:210px;padding:18px 8px 26px;border-bottom:1px solid var(--linea);background:linear-gradient(180deg,#f8fcff,#fff)}.chart-month{display:flex;flex-direction:column;align-items:center;justify-content:end;height:100%;gap:5px;font-size:11px;color:var(--gris)}.chart-bar{width:100%;max-width:32px;min-height:4px;border-radius:8px 8px 0 0;background:linear-gradient(180deg,#38bdf8,var(--azul));position:relative}.chart-bar span{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font-weight:900;color:var(--azul);font-size:11px}.report-grid{display:grid;grid-template-columns:220px 1fr;gap:12px;align-items:end}.report-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}@media (max-width:1150px){.portal-menu{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:900px){.portal-menu{grid-template-columns:1fr}.summary-grid{grid-template-columns:1fr}.report-grid{grid-template-columns:1fr}}
 .cards {
-  display:grid;
+  display:block;
   grid-template-columns:repeat(auto-fill,minmax(315px,1fr));
   gap:14px;
 }
 .phone-card {
-  min-height:76px;
+  min-height:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
   background:white;
   border:1px solid var(--linea);
   border-left:8px solid var(--azul);
@@ -439,7 +443,7 @@ tr:hover td {
   background:#fff8f8;
 }
 .phone-card h3 {
-  margin:0 0 6px;
+  margin:0;
   color:var(--azul);
   font-size:18px;
   line-height:1.25;
