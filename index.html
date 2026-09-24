@@ -395,9 +395,10 @@ tr:hover td {
   max-width:145px;
 }
 .add-date button {
-  padding:8px 10px;
+  padding:7px 9px;
   font-size:13px;
 }
+.btn-ver{padding:7px 10px!important;font-size:12px!important}
 .comentario textarea {
   min-height:76px;
   resize:vertical;
@@ -1293,15 +1294,15 @@ function renderAsistencia() {
       </td>
       <td><span class="badge red">${inas.length}</span></td>
       <td>
-        <button class="btn-sec" onclick="mostrarRegistros('${escapeAttr(a.id)}','inasistencia')">Mostrar registros</button>
         <div class="add-date">
+          <button class="btn-sec btn-ver" onclick="mostrarRegistros('${escapeAttr(a.id)}','inasistencia')">Ver</button>
           <button class="btn-inas" onclick="abrirFormularioRegistro('${escapeAttr(a.id)}','inasistencia')">➕</button>
         </div>
       </td>
       <td><span class="badge green">${atr.length}</span></td>
       <td>
-        <button class="btn-sec" onclick="mostrarRegistros('${escapeAttr(a.id)}','atraso')">Mostrar registros</button>
         <div class="add-date">
+          <button class="btn-sec btn-ver" onclick="mostrarRegistros('${escapeAttr(a.id)}','atraso')">Ver</button>
           <button class="btn-atraso" onclick="abrirFormularioRegistro('${escapeAttr(a.id)}','atraso')">⏱</button>
         </div>
       </td>
