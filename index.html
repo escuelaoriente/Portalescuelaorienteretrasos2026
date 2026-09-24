@@ -853,7 +853,7 @@ tr:hover td {
 
 <div class="modal-bg" id="modalEditar">
   <div class="modal">
-    <h2>Editar alumno</h2>
+    <h2>Datos del alumno</h2>
     <input type="hidden" id="editId">
     <div class="modal-grid">
       <input id="editNombre" placeholder="Nombre">
@@ -1341,19 +1341,9 @@ function renderTelefonico() {
 
   box.innerHTML = filtrados.map(a => {
     const alerta = esAlertaTelefonica(a);
-
     return `<article class="phone-card ${alerta ? "alert" : ""}">
       <h3>${escapeHtml(a.nombre || "")}</h3>
-      <div class="small">Curso: ${escapeHtml(a.curso || "")} · RUT: ${escapeHtml(a.rut || "Sin registro")}</div>
-      <div class="line"><span class="label">Teléfono:</span> ${escapeHtml(a.telefono || "Sin registro")}</div>
-      <div class="line"><span class="label">Apoderado titular:</span> ${escapeHtml(a.apoderado || "Sin registro")}</div>
-      <div class="line"><span class="label">Suplentes:</span> ${escapeHtml(a.suplentes || "Sin registro")}</div>
-      <div class="warning">⚠ ATENCIÓN: revisar comentario antes de entregar al estudiante ⚠</div>
-      <textarea id="telCom_${escapeHtml(a.id)}" placeholder="Comentario telefónico u observación importante">${escapeHtml(a.comentarioTelefono || "")}</textarea>
-      <div class="phone-actions">
-        <button class="btn-sec" onclick="guardarComentarioTelefono('${escapeAttr(a.id)}')">Guardar comentario</button>
-        <button onclick="abrirEditar('${escapeAttr(a.id)}')">Editar datos</button>
-      </div>
+      <button onclick="abrirEditar('${escapeAttr(a.id)}')">Ver datos</button>
     </article>`;
   }).join("");
 }
