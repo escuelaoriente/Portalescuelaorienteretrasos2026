@@ -692,7 +692,7 @@ tr:hover td {
       </div>
     </div>
     <div class="status">
-      <div class="db-meter"><strong>Base de datos única</strong><div class="db-meter-label"><span id="dbUsageText">Calculando uso...</span><span>capacidad estimada</span></div><div class="db-meter-track"><div id="dbUsageFill" class="db-meter-fill"></div></div></div>
+      <div class="db-meter"><strong>Base de datos única</strong><div class="db-meter-label"><span id="dbUsageText">Calculando uso...</span><a href="https://console.firebase.google.com/project/portal-escuela-oriente/usage" target="_blank" rel="noopener" style="color:white;text-decoration:underline">Ver uso real</a></div><div class="db-meter-track"><div id="dbUsageFill" class="db-meter-fill"></div></div></div>
       <div class="sync-line"><span id="syncDot" class="sync-dot"></span><span id="syncText">Sin sincronizar</span></div>
       <span id="lastUpdate">Cargando...</span>
       <div class="weather" id="weatherBox">🌤️ Consultando tiempo de Quellón...</div>
@@ -971,7 +971,7 @@ async function siguienteId(nombre) {
   return String(max + 1);
 }
 
-function actualizarMedidorBase(total){const limite=10000;const porcentaje=Math.min(100,Math.round(total/limite*100));const texto=document.getElementById("dbUsageText"),fill=document.getElementById("dbUsageFill");if(texto)texto.textContent=`${total.toLocaleString("es-CL")} registros`;if(fill){fill.style.width=porcentaje+"%";fill.classList.toggle("warn",porcentaje>=70&&porcentaje<90);fill.classList.toggle("danger",porcentaje>=90)}}
+function actualizarMedidorBase(total){const texto=document.getElementById("dbUsageText"),fill=document.getElementById("dbUsageFill");if(texto)texto.textContent=`${total.toLocaleString("es-CL")} registros actuales`;if(fill){fill.style.width="0%";fill.classList.remove("warn","danger")}}
 
 async function cargarDatos() {
   const dot=document.getElementById("syncDot"), syncText=document.getElementById("syncText");
