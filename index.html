@@ -871,7 +871,7 @@ tr:hover td {
     </div>
     <div class="modal-actions">
       <button class="btn-sec" onclick="cerrarEditar()">Cancelar</button>
-      <button onclick="guardarEdicion()">Guardar cambios</button>
+      <button class="btn-danger" onclick="eliminarDesdeEdicion()">Eliminar alumno</button><button onclick="guardarEdicion()">Guardar cambios</button>
     </div>
   </div>
 </div>
@@ -970,12 +970,11 @@ async function siguienteId(nombre) {
   const snap = await db.collection(nombre).get();
   let max = 0;
   snap.forEach(doc => {
-    const value = Number(doc.id);
-    if (Number.isFinite(value) && value > max) {
-      max = value;
-    }
+    const match = nombre === "alumnos" ? String(doc.id).match(/(?:ALU-)?(\d+)$/i) : String(doc.id).match(/(\d+)$/);
+    const value = match ? Number(match[1]) : 0;
+    if (Number.isFinite(value) && value > max) max = value;
   });
-  return String(max + 1);
+  return nombre === "alumnos" ? `ALU-${String(max + 1).padStart(4,"0")}` : String(max + 1);
 }
 
 function actualizarResumenEncabezado(){const el=document.getElementById("headerSummary");if(!el)return;const hoy=new Date();const fecha=hoy.toLocaleDateString("es-CL",{weekday:"long",day:"numeric",month:"long",year:"numeric"});const iso=hoy.toISOString().slice(0,10);const ina=estado.inasistencias.filter(x=>x.fecha===iso).length;const atr=estado.atrasos.filter(x=>x.fecha===iso).length;const prohib=estado.alumnos.filter(x=>x.prohibicionRetiro).length;el.innerHTML=`<div class="summary-date">${fecha.charAt(0).toUpperCase()+fecha.slice(1)}</div><div class="summary-counts">${estado.alumnos.length} alumnos · ${ina} inasistencias · ${atr} atrasos</div><div class="summary-alert">⚠ ${prohib} alumnos con prohibición de retiro</div>`}
@@ -1514,6 +1513,8 @@ function abrirEditar(alumnoId) {
 function cerrarEditar() {
   document.getElementById("modalEditar").style.display = "none";
 }
+
+async function eliminarDesdeEdicion(){const id=document.getElementById("editId").value;cerrarEditar();await eliminarAlumno(id)}
 
 async function guardarEdicion() {
   const alumnoId = document.getElementById("editId").value;
