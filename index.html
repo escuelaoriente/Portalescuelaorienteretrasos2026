@@ -1389,6 +1389,7 @@ async function agregarAlumno() {
     return alerta("Escriba el nombre del alumno.", "error");
   }
 
+  if (!CURSOS.includes(payload.curso)) return alerta("Seleccione un curso válido.", "error");
   await postData(payload);
   cursoActual = payload.curso;
   alerta("Alumno agregado.");
@@ -1411,6 +1412,7 @@ async function agregarAlumnoTelefonico() {
     return alerta("Escriba el nombre del alumno.", "error");
   }
 
+  if (!CURSOS.includes(payload.curso)) return alerta("Seleccione un curso válido.", "error");
   await postData(payload);
   cursoActual = payload.curso;
   alerta("Alumno agregado.");
@@ -1532,7 +1534,7 @@ async function guardarEdicion() {
     comentarioTelefono: document.getElementById("editComentarioTelefono").value.trim(),
     prohibicionRetiro: document.getElementById("editProhibicionRetiro").checked,
     nombreProhibicion: document.getElementById("editNombreProhibicion").value.trim(),
-    curso: document.getElementById("editCurso").value
+    curso: document.getElementById("editCurso").value || (buscarAlumno(alumnoId)?.curso) || cursoActual
   };
 
   if (!payload.nombre) {
