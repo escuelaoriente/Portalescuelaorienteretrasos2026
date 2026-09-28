@@ -1376,7 +1376,7 @@ function toggleAgregarTelefonico() {
 }
 
 function limpiarFormularioAlumno(){["nuevoNombre","nuevoRut","nuevoApoderado","nuevoTelefono"].forEach(id=>{const el=document.getElementById(id);if(el)el.value=""})}
-function mostrarGuardando(){const box=document.getElementById("alerta");if(box){box.className="alerta ok";box.innerHTML="<span class="spinner"></span> Guardando alumno...";box.style.display="block"}}
+function mostrarGuardando(){const box=document.getElementById("alerta");if(box){box.className="alerta ok";box.innerHTML='<span class="spinner"></span> Guardando alumno...';box.style.display="block"}}
 
 async function agregarAlumno() {
   const payload = {
