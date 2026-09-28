@@ -857,7 +857,7 @@ tr:hover td {
 <div class="modal-bg" id="modalEditar">
   <div class="modal">
     <h2>Datos del alumno</h2>
-    <input type="hidden" id="editId">
+    <input type="hidden" id="editId"><input type="hidden" id="editCursoOriginal">
     <div class="modal-grid">
       <input id="editNombre" placeholder="Nombre">
       <input id="editRut" placeholder="RUT">
@@ -1512,6 +1512,7 @@ function abrirEditar(alumnoId) {
   document.getElementById("editProhibicionRetiro").checked = !!a.prohibicionRetiro;
   document.getElementById("editNombreProhibicion").value = a.nombreProhibicion || "";
   editCursoTouched = false;
+  document.getElementById("editCursoOriginal").value = a.curso || cursoActual;
   document.getElementById("editCurso").value = a.curso || cursoActual;
   document.getElementById("modalEditar").style.display = "flex";
 }
@@ -1536,7 +1537,7 @@ async function guardarEdicion() {
     comentarioTelefono: document.getElementById("editComentarioTelefono").value.trim(),
     prohibicionRetiro: document.getElementById("editProhibicionRetiro").checked,
     nombreProhibicion: document.getElementById("editNombreProhibicion").value.trim(),
-    curso: ((buscarAlumno(alumnoId)?.curso) || cursoActual)
+    curso: document.getElementById("editCursoOriginal").value || ((buscarAlumno(alumnoId)?.curso) || cursoActual)
   };
 
   if (!payload.nombre) {
