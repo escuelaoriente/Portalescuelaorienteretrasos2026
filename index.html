@@ -864,7 +864,7 @@ tr:hover td {
       <input id="editApoderado" placeholder="Apoderado titular">
       <input id="editTelefono" placeholder="Teléfono">
       <input id="editSuplentes" placeholder="Suplentes separados por /">
-      <select id="editCurso"></select>
+      <select id="editCurso" onchange="editCursoTouched=true"></select>
       <textarea id="editComentarioTelefono" placeholder="Comentario telefónico u observación importante"></textarea>
       <label class="retiro-label" style="display:flex;align-items:center;gap:6px;font-weight:900;color:#b42323"><input id="editProhibicionRetiro" type="checkbox"> Prohibición de retiro</label>
       <textarea id="editNombreProhibicion" class="retiro-nombres" placeholder="Nombres autorizados para bloquear (uno por línea)"></textarea>
@@ -912,6 +912,7 @@ let estado = {
 };
 
 let cursoActual = CURSOS[0];
+let editCursoTouched = false;
 let moduloActual = localStorage.getItem("portalModuloEscuelaOriente") || "home";
 
 function normalizar(t) {
@@ -1510,6 +1511,7 @@ function abrirEditar(alumnoId) {
   document.getElementById("editComentarioTelefono").value = a.comentarioTelefono || "";
   document.getElementById("editProhibicionRetiro").checked = !!a.prohibicionRetiro;
   document.getElementById("editNombreProhibicion").value = a.nombreProhibicion || "";
+  editCursoTouched = false;
   document.getElementById("editCurso").value = a.curso || cursoActual;
   document.getElementById("modalEditar").style.display = "flex";
 }
@@ -1534,7 +1536,7 @@ async function guardarEdicion() {
     comentarioTelefono: document.getElementById("editComentarioTelefono").value.trim(),
     prohibicionRetiro: document.getElementById("editProhibicionRetiro").checked,
     nombreProhibicion: document.getElementById("editNombreProhibicion").value.trim(),
-    curso: document.getElementById("editCurso").value || (buscarAlumno(alumnoId)?.curso) || cursoActual
+    curso: editCursoTouched ? document.getElementById("editCurso").value : ((buscarAlumno(alumnoId)?.curso) || cursoActual)
   };
 
   if (!payload.nombre) {
