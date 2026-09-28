@@ -1536,7 +1536,7 @@ async function guardarEdicion() {
     comentarioTelefono: document.getElementById("editComentarioTelefono").value.trim(),
     prohibicionRetiro: document.getElementById("editProhibicionRetiro").checked,
     nombreProhibicion: document.getElementById("editNombreProhibicion").value.trim(),
-    curso: editCursoTouched ? document.getElementById("editCurso").value : ((buscarAlumno(alumnoId)?.curso) || cursoActual)
+    curso: ((buscarAlumno(alumnoId)?.curso) || cursoActual)
   };
 
   if (!payload.nombre) {
