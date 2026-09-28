@@ -89,6 +89,7 @@ main {
   margin:20px auto;
   padding:0 16px 40px;
 }
+.spinner{display:inline-block;width:16px;height:16px;border:3px solid rgba(255,255,255,.45);border-top-color:white;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle}@keyframes spin{to{transform:rotate(360deg)}}
 .alerta {
   display:none;
   padding:13px 15px;
@@ -287,6 +288,7 @@ button:hover {
 }
 .form-add {
   display:none;
+  position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:40;width:min(620px,92vw);
   background:white;
   border:1px solid var(--linea);
   border-radius:20px;
@@ -1373,6 +1375,9 @@ function toggleAgregarTelefonico() {
   document.getElementById("telCurso").value = cursoActual;
 }
 
+function limpiarFormularioAlumno(){["nuevoNombre","nuevoRut","nuevoApoderado","nuevoTelefono"].forEach(id=>{const el=document.getElementById(id);if(el)el.value=""})}
+function mostrarGuardando(){const box=document.getElementById("alerta");if(box){box.className="alerta ok";box.innerHTML="<span class="spinner"></span> Guardando alumno...";box.style.display="block"}}
+
 async function agregarAlumno() {
   const payload = {
     action:"agregarAlumno",
@@ -1390,9 +1395,12 @@ async function agregarAlumno() {
   }
 
   if (!CURSOS.includes(payload.curso)) return alerta("Seleccione un curso válido.", "error");
+  mostrarGuardando();
   await postData(payload);
+  limpiarFormularioAlumno();
+  document.getElementById("formAgregar").style.display="none";
   cursoActual = payload.curso;
-  alerta("Alumno agregado.");
+  alerta("Alumno guardado correctamente.");
   await cargarDatos(true);
 }
 
