@@ -288,13 +288,30 @@ button:hover {
 }
 .form-add {
   display:none;
-  position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:40;width:min(620px,92vw);
+  position:fixed;
+  inset:0;
+  z-index:40;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:rgba(3,38,64,.72);
+  backdrop-filter:blur(4px);
+}
+.form-dialog{
+  width:min(650px,94vw);
+  max-height:90vh;
+  overflow:auto;
   background:white;
   border:1px solid var(--linea);
-  border-radius:20px;
-  padding:14px;
-  margin-bottom:16px;
-  box-shadow:0 8px 22px rgba(15,79,134,.08);
+  border-radius:22px;
+  padding:22px;
+  box-shadow:0 24px 70px rgba(0,0,0,.3);
+}
+.form-dialog h2{margin:0 0 16px;color:var(--azul)}
+.form-dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+.save-status{display:none;align-items:center;justify-content:center;gap:10px;margin-top:14px;padding:12px;border-radius:12px;background:#eaf8f0;color:#12633c;font-weight:900}
+.save-status.visible{display:flex}
+.save-status .spinner{border-color:rgba(18,99,60,.2);border-top-color:#16804a}
 }
 .form-grid {
   display:grid;
@@ -783,13 +800,20 @@ tr:hover td {
         </div>
 
         <div class="form-add" id="formAgregar">
-          <div class="form-grid">
-            <input id="nuevoNombre" placeholder="Nombre completo">
-            <input id="nuevoRut" placeholder="RUT">
-            <input id="nuevoApoderado" placeholder="Apoderado">
-            <input id="nuevoTelefono" placeholder="Teléfono">
-            <select id="nuevoCurso"></select>
-            <button onclick="agregarAlumno()">Guardar</button>
+          <div class="form-dialog">
+            <h2>Agregar alumno</h2>
+            <div class="form-grid">
+              <input id="nuevoNombre" placeholder="Nombre completo">
+              <input id="nuevoRut" placeholder="RUT">
+              <input id="nuevoApoderado" placeholder="Apoderado">
+              <input id="nuevoTelefono" placeholder="Teléfono">
+              <select id="nuevoCurso" onchange="this.dataset.seleccionado=this.value"></select>
+            </div>
+            <div id="estadoGuardarAlumno" class="save-status"></div>
+            <div class="form-dialog-actions">
+              <button class="btn-sec" onclick="cerrarAgregar()">Cancelar</button>
+              <button id="btnGuardarAlumno" onclick="agregarAlumno()">Guardar alumno</button>
+            </div>
           </div>
         </div>
 
@@ -840,13 +864,20 @@ tr:hover td {
         </div>
 
         <div class="form-add" id="formAgregarTel">
-          <div class="form-grid">
-            <input id="telNombre" placeholder="Nombre completo">
-            <input id="telRut" placeholder="RUT">
-            <input id="telApoderado" placeholder="Apoderado titular">
-            <input id="telTelefono" placeholder="Teléfono">
-            <select id="telCurso"></select>
-            <button onclick="agregarAlumnoTelefonico()">Guardar</button>
+          <div class="form-dialog">
+            <h2>Agregar alumno</h2>
+            <div class="form-grid">
+              <input id="telNombre" placeholder="Nombre completo">
+              <input id="telRut" placeholder="RUT">
+              <input id="telApoderado" placeholder="Apoderado titular">
+              <input id="telTelefono" placeholder="Teléfono">
+              <select id="telCurso" onchange="this.dataset.seleccionado=this.value"></select>
+            </div>
+            <div id="estadoGuardarAlumnoTel" class="save-status"></div>
+            <div class="form-dialog-actions">
+              <button class="btn-sec" onclick="cerrarAgregarTelefonico()">Cancelar</button>
+              <button id="btnGuardarAlumnoTel" onclick="agregarAlumnoTelefonico()">Guardar alumno</button>
+            </div>
           </div>
         </div>
 
@@ -1363,20 +1394,35 @@ function renderTelefonico() {
 
 function toggleAgregar() {
   const f = document.getElementById("formAgregar");
-  f.style.display = f.style.display === "block" ? "none" : "block";
   llenarSelects();
-  document.getElementById("nuevoCurso").value = cursoActual;
+  const curso = document.getElementById("nuevoCurso");
+  curso.value = cursoActual;
+  curso.dataset.seleccionado = cursoActual;
+  document.getElementById("estadoGuardarAlumno").className = "save-status";
+  document.getElementById("btnGuardarAlumno").disabled = false;
+  f.style.display = "flex";
 }
 
 function toggleAgregarTelefonico() {
   const f = document.getElementById("formAgregarTel");
-  f.style.display = f.style.display === "block" ? "none" : "block";
   llenarSelects();
-  document.getElementById("telCurso").value = cursoActual;
+  const curso = document.getElementById("telCurso");
+  curso.value = cursoActual;
+  curso.dataset.seleccionado = cursoActual;
+  document.getElementById("estadoGuardarAlumnoTel").className = "save-status";
+  document.getElementById("btnGuardarAlumnoTel").disabled = false;
+  f.style.display = "flex";
 }
 
-function limpiarFormularioAlumno(){["nuevoNombre","nuevoRut","nuevoApoderado","nuevoTelefono"].forEach(id=>{const el=document.getElementById(id);if(el)el.value=""})}
-function mostrarGuardando(){const box=document.getElementById("alerta");if(box){box.className="alerta ok";box.innerHTML='<span class="spinner"></span> Guardando alumno...';box.style.display="block"}}
+function cerrarAgregar(){document.getElementById("formAgregar").style.display="none"}
+function cerrarAgregarTelefonico(){document.getElementById("formAgregarTel").style.display="none"}
+function limpiarFormularioAlumno(prefijo="nuevo"){
+  const ids=prefijo==="tel"?["telNombre","telRut","telApoderado","telTelefono"]:["nuevoNombre","nuevoRut","nuevoApoderado","nuevoTelefono"];
+  ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=""});
+}
+function cursoElegido(id){const el=document.getElementById(id);return el.dataset.seleccionado||el.value||cursoActual}
+function estadoGuardado(id,mensaje,cargando=true){const box=document.getElementById(id);box.className="save-status visible";box.innerHTML=cargando?`<span class="spinner"></span>${mensaje}`:`✓ ${mensaje}`}
+function esperar(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
 
 async function agregarAlumno() {
   const payload = {
@@ -1385,7 +1431,7 @@ async function agregarAlumno() {
     rut: document.getElementById("nuevoRut").value.trim(),
     apoderado: document.getElementById("nuevoApoderado").value.trim().toUpperCase(),
     telefono: document.getElementById("nuevoTelefono").value.trim(),
-    curso: document.getElementById("nuevoCurso").value || cursoActual,
+    curso: cursoElegido("nuevoCurso"),
     suplentes: "",
     comentarioTelefono: ""
   };
@@ -1395,13 +1441,22 @@ async function agregarAlumno() {
   }
 
   if (!CURSOS.includes(payload.curso)) return alerta("Seleccione un curso válido.", "error");
-  mostrarGuardando();
-  await postData(payload);
-  limpiarFormularioAlumno();
-  document.getElementById("formAgregar").style.display="none";
-  cursoActual = payload.curso;
-  alerta("Alumno guardado correctamente.");
-  await cargarDatos(true);
+  const boton=document.getElementById("btnGuardarAlumno");
+  boton.disabled=true;
+  estadoGuardado("estadoGuardarAlumno","Guardando alumno...");
+  try{
+    await postData(payload);
+    cursoActual = payload.curso;
+    await cargarDatos(true);
+    limpiarFormularioAlumno();
+    estadoGuardado("estadoGuardarAlumno","Alumno guardado",false);
+    await esperar(900);
+    cerrarAgregar();
+  }catch(error){
+    boton.disabled=false;
+    document.getElementById("estadoGuardarAlumno").className="save-status";
+    alerta("No se pudo guardar: "+error.message,"error");
+  }
 }
 
 async function agregarAlumnoTelefonico() {
@@ -1411,7 +1466,7 @@ async function agregarAlumnoTelefonico() {
     rut: document.getElementById("telRut").value.trim(),
     apoderado: document.getElementById("telApoderado").value.trim().toUpperCase(),
     telefono: document.getElementById("telTelefono").value.trim(),
-    curso: document.getElementById("telCurso").value || cursoActual,
+    curso: cursoElegido("telCurso"),
     suplentes: "",
     comentarioTelefono: ""
   };
@@ -1421,10 +1476,22 @@ async function agregarAlumnoTelefonico() {
   }
 
   if (!CURSOS.includes(payload.curso)) return alerta("Seleccione un curso válido.", "error");
-  await postData(payload);
-  cursoActual = payload.curso;
-  alerta("Alumno agregado.");
-  await cargarDatos(true);
+  const boton=document.getElementById("btnGuardarAlumnoTel");
+  boton.disabled=true;
+  estadoGuardado("estadoGuardarAlumnoTel","Guardando alumno...");
+  try{
+    await postData(payload);
+    cursoActual = payload.curso;
+    await cargarDatos(true);
+    limpiarFormularioAlumno("tel");
+    estadoGuardado("estadoGuardarAlumnoTel","Alumno guardado",false);
+    await esperar(900);
+    cerrarAgregarTelefonico();
+  }catch(error){
+    boton.disabled=false;
+    document.getElementById("estadoGuardarAlumnoTel").className="save-status";
+    alerta("No se pudo guardar: "+error.message,"error");
+  }
 }
 
 function abrirCalendario(id){const el=document.getElementById(id);if(!el)return;if(typeof el.showPicker==="function")el.showPicker();else el.focus()}
