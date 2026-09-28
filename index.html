@@ -864,7 +864,7 @@ tr:hover td {
       <input id="editApoderado" placeholder="Apoderado titular">
       <input id="editTelefono" placeholder="Teléfono">
       <input id="editSuplentes" placeholder="Suplentes separados por /">
-      <select id="editCurso" onchange="editCursoTouched=true"></select>
+      <select id="editCurso" disabled></select>
       <textarea id="editComentarioTelefono" placeholder="Comentario telefónico u observación importante"></textarea>
       <label class="retiro-label" style="display:flex;align-items:center;gap:6px;font-weight:900;color:#b42323"><input id="editProhibicionRetiro" type="checkbox"> Prohibición de retiro</label>
       <textarea id="editNombreProhibicion" class="retiro-nombres" placeholder="Nombres autorizados para bloquear (uno por línea)"></textarea>
@@ -1124,8 +1124,7 @@ async function postData(payload) {
       suplentes: payload.suplentes || "",
       comentarioTelefono: payload.comentarioTelefono || "",
       prohibicionRetiro: !!payload.prohibicionRetiro,
-      nombreProhibicion: payload.nombreProhibicion || "",
-      curso: payload.curso || ""
+      nombreProhibicion: payload.nombreProhibicion || ""
     });
     return { ok:true };
   }
