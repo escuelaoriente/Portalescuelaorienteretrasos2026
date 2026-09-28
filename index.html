@@ -298,6 +298,7 @@ button:hover {
   backdrop-filter:blur(4px);
 }
 .form-dialog{
+  position:relative;
   width:min(650px,94vw);
   max-height:90vh;
   overflow:auto;
@@ -308,6 +309,7 @@ button:hover {
   box-shadow:0 24px 70px rgba(0,0,0,.3);
 }
 .form-dialog h2{margin:0 0 16px;color:var(--azul)}
+.form-dialog-close{position:absolute;right:14px;top:12px;width:38px;height:38px;padding:0;border-radius:50%;background:#e8f1f7;color:var(--azul);font-size:22px;line-height:1}
 .form-dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
 .save-status{display:none;align-items:center;justify-content:center;gap:10px;margin-top:14px;padding:12px;border-radius:12px;background:#eaf8f0;color:#12633c;font-weight:900}
 .save-status.visible{display:flex}
@@ -801,6 +803,7 @@ tr:hover td {
 
         <div class="form-add" id="formAgregar">
           <div class="form-dialog">
+            <button class="form-dialog-close" aria-label="Cerrar" onclick="cerrarAgregar()">×</button>
             <h2>Agregar alumno</h2>
             <div class="form-grid">
               <input id="nuevoNombre" placeholder="Nombre completo">
@@ -865,6 +868,7 @@ tr:hover td {
 
         <div class="form-add" id="formAgregarTel">
           <div class="form-dialog">
+            <button class="form-dialog-close" aria-label="Cerrar" onclick="cerrarAgregarTelefonico()">×</button>
             <h2>Agregar alumno</h2>
             <div class="form-grid">
               <input id="telNombre" placeholder="Nombre completo">
