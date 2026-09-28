@@ -1277,7 +1277,7 @@ function alumnosCursoFiltrados(buscarId) {
   const q = normalizar(document.getElementById(buscarId).value);
 
   return alumnosActivos()
-    .filter(a => String(a.curso) === String(cursoActual))
+    .filter(a => q ? true : String(a.curso) === String(cursoActual))
     .filter(a => {
       const full = `${a.nombre || ""} ${a.rut || ""} ${a.apoderado || ""} ${a.telefono || ""} ${a.suplentes || ""}`;
       return normalizar(full).includes(q);
