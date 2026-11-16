@@ -882,6 +882,7 @@ tr:hover td {
               <input id="telRut" placeholder="RUT">
               <input id="telApoderado" placeholder="Apoderado titular">
               <input id="telTelefono" placeholder="Teléfono">
+              <input id="telReceptorLlamada" placeholder="Quién recepcionó la llamada (apoderado/tutor)">
               <select id="telCurso" onchange="this.dataset.seleccionado=this.value"></select>
             </div>
             <div id="estadoGuardarAlumnoTel" class="save-status"></div>
@@ -907,6 +908,7 @@ tr:hover td {
       <input id="editRut" placeholder="RUT">
       <input id="editApoderado" placeholder="Apoderado titular">
       <input id="editTelefono" placeholder="Teléfono">
+      <input id="editReceptorLlamada" placeholder="Quién recepcionó la llamada (apoderado/tutor)">
       <input id="editSuplentes" placeholder="Suplentes separados por /">
       <select id="editCurso" disabled></select>
       <textarea id="editComentarioTelefono" placeholder="Comentario telefónico u observación importante"></textarea>
@@ -1095,6 +1097,7 @@ async function postData(payload) {
       fechaRegistro: creado,
       suplentes: payload.suplentes || "",
       comentarioTelefono: payload.comentarioTelefono || "",
+      receptorLlamada: payload.receptorLlamada || "",
       prohibicionRetiro: !!payload.prohibicionRetiro,
       nombreProhibicion: payload.nombreProhibicion || ""
     });
@@ -1169,6 +1172,7 @@ async function postData(payload) {
       rut: payload.rut || "",
       apoderado: payload.apoderado || "",
       telefono: payload.telefono || "",
+      receptorLlamada: payload.receptorLlamada || "",
       suplentes: payload.suplentes || "",
       comentarioTelefono: payload.comentarioTelefono || "",
       prohibicionRetiro: !!payload.prohibicionRetiro,
@@ -1401,7 +1405,7 @@ function renderTelefonico() {
   box.innerHTML = filtrados.map(a => {
     const alerta = esAlertaTelefonica(a);
     return `<article class="phone-card ${alerta ? "alert" : ""} ${a.prohibicionRetiro ? "retiro-prohibido" : ""}">
-      <h3>${escapeHtml(a.nombre || "")}</h3>
+      <h3>${escapeHtml(a.nombre || "")}</h3><div class="small">Recepcionó la llamada: ${escapeHtml(a.receptorLlamada || "Sin registro")}</div>
       <button onclick="abrirEditar('${escapeAttr(a.id)}')">Ver</button>
     </article>`;
   }).join("");
@@ -1481,6 +1485,7 @@ async function agregarAlumnoTelefonico() {
     rut: document.getElementById("telRut").value.trim(),
     apoderado: document.getElementById("telApoderado").value.trim().toUpperCase(),
     telefono: document.getElementById("telTelefono").value.trim(),
+    receptorLlamada: document.getElementById("telReceptorLlamada").value.trim(),
     curso: cursoElegido("telCurso"),
     suplentes: "",
     comentarioTelefono: ""
@@ -1624,6 +1629,7 @@ function abrirEditar(alumnoId) {
   document.getElementById("editRut").value = a.rut || "";
   document.getElementById("editApoderado").value = a.apoderado || "";
   document.getElementById("editTelefono").value = a.telefono || "";
+  document.getElementById("editReceptorLlamada").value = a.receptorLlamada || "";
   document.getElementById("editSuplentes").value = a.suplentes || "";
   document.getElementById("editComentarioTelefono").value = a.comentarioTelefono || "";
   document.getElementById("editProhibicionRetiro").checked = !!a.prohibicionRetiro;
@@ -1650,6 +1656,7 @@ async function guardarEdicion() {
     rut: document.getElementById("editRut").value.trim(),
     apoderado: document.getElementById("editApoderado").value.trim().toUpperCase(),
     telefono: document.getElementById("editTelefono").value.trim(),
+    receptorLlamada: document.getElementById("editReceptorLlamada").value.trim(),
     suplentes: document.getElementById("editSuplentes").value.trim(),
     comentarioTelefono: document.getElementById("editComentarioTelefono").value.trim(),
     prohibicionRetiro: document.getElementById("editProhibicionRetiro").checked,
