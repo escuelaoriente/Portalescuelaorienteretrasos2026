@@ -686,6 +686,13 @@ tr:hover td {
   box-shadow:none;
 }
 
+.registro-item button.ver-comprobante{background:transparent;color:#b42323;padding:6px 0;text-align:left;box-shadow:none;text-decoration:underline;border-radius:4px;font:inherit;font-weight:900}
+.registro-item button.ver-comprobante:focus-visible{outline:3px solid #0b72b9;outline-offset:3px}
+#modalComprobante{z-index:21}
+#modalComprobante .modal{max-height:90vh;overflow:auto}
+.comprobante-datos{display:grid;grid-template-columns:minmax(120px,1fr) 2fr;gap:12px;margin:18px 0}
+.comprobante-datos dt{font-weight:700}.comprobante-datos dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:600px){.comprobante-datos{grid-template-columns:1fr;gap:6px}.comprobante-datos dd{margin-bottom:10px}}
 </style>
 </head>
 <body>
@@ -914,7 +921,8 @@ tr:hover td {
 </div>
 
 <div class="modal-bg" id="modalRegistros"><div class="modal"><div class="top-actions"><h2 id="registrosTitulo">Registros del alumno</h2><button class="btn-sec" onclick="cerrarRegistros()">Cerrar</button></div><div id="listaRegistros" class="registro-list"></div></div></div>
-<div class="modal-bg" id="modalRegistroForm"><div class="modal"><h2 id="registroFormTitulo">Registrar registro</h2><input type="hidden" id="registroFormAlumno"><input type="hidden" id="registroFormTipo"><label>Fecha<input type="date" id="registroFormFecha"></label><label id="registroHoraLabel" style="display:none;margin-top:10px">Hora<input type="time" id="registroFormHora"></label><label style="display:block;margin-top:10px">Motivo o justificación<textarea id="registroFormMotivo" placeholder="Escriba el motivo"></textarea></label><fieldset id="registroConocimiento" hidden style="margin:16px 0;padding:12px;border:1px solid var(--linea);border-radius:10px"><legend>Asistente que tomó conocimiento</legend><label>Nombre del asistente<input type="text" id="registroFormAsistente" maxlength="150" placeholder="Nombre y apellido"></label><label style="display:block;margin-top:10px">Fecha en que tomó conocimiento<input type="date" id="registroFormFechaConocimiento"></label><label style="display:block;margin-top:10px">Hora en que tomó conocimiento<input type="time" id="registroFormHoraConocimiento"></label></fieldset><div class="modal-actions"><button class="btn-sec" onclick="cerrarRegistroForm()">Cancelar</button><button onclick="guardarRegistroForm()">Guardar registro</button></div></div></div>
+<div class="modal-bg" id="modalComprobante" role="dialog" aria-modal="true" aria-labelledby="comprobanteTitulo"><div class="modal"><div class="top-actions"><h2 id="comprobanteTitulo">Detalle del comprobante de inasistencia</h2><button id="cerrarComprobante" class="btn-sec" onclick="cerrarDetalleComprobante()">Volver a registros</button></div><dl id="comprobanteDatos" class="comprobante-datos"></dl></div></div>
+<div class="modal-bg" id="modalRegistroForm"><div class="modal"><h2 id="registroFormTitulo">Registrar registro</h2><input type="hidden" id="registroFormAlumno"><input type="hidden" id="registroFormTipo"><label>Fecha<input type="date" id="registroFormFecha"></label><label id="registroHoraLabel" style="display:none;margin-top:10px">Hora<input type="time" id="registroFormHora"></label><label style="display:block;margin-top:10px">Motivo o justificación<textarea id="registroFormMotivo" placeholder="Escriba el motivo"></textarea></label><fieldset id="registroConocimiento" hidden style="margin:16px 0;padding:12px;border:1px solid var(--linea);border-radius:10px"><legend>Recepción del comprobante</legend><label>Nombre del inspector o asistente que lo recibió<input type="text" id="registroFormAsistente" maxlength="150" placeholder="Nombre y apellido"></label><label style="display:block;margin-top:10px">Fecha de recepción<input type="date" id="registroFormFechaConocimiento"></label><label style="display:block;margin-top:10px">Hora de recepción<input type="time" id="registroFormHoraConocimiento"></label></fieldset><div class="modal-actions"><button class="btn-sec" onclick="cerrarRegistroForm()">Cancelar</button><button onclick="guardarRegistroForm()">Guardar registro</button></div></div></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
@@ -1752,12 +1760,45 @@ async function loginPortal() {
   }
 }
 function registrosPorAlumno(lista, alumnoId) { return lista.filter(x => String(x.alumnoId || x.alumnoid) === String(alumnoId)); }
+let comprobanteOrigen=null;
+document.getElementById("listaRegistros").addEventListener("click",event=>{
+  const boton=event.target.closest("button[data-comprobante-id]");
+  if(boton)abrirDetalleComprobante(boton.dataset.comprobanteId,boton);
+});
+function abrirDetalleComprobante(id,origen){
+  const registro=estado.inasistencias.find(x=>String(x.id)===String(id));
+  if(!registro)return alerta("No se encontró la inasistencia.","error");
+  const alumno=buscarAlumno(registro.alumnoId||registro.alumnoid);
+  const datos=[
+    ["Alumno",alumno?.nombre||registro.nombre||"Sin registro"],
+    ["Curso",alumno?.curso||registro.curso||"Sin registro"],
+    ["Fecha de inasistencia",registro.fecha||"Sin registro"],
+    ["Motivo o justificación",registro.comentario||"Sin motivo registrado"],
+    ["Inspector que recibió el comprobante",registro.asistenteConocimiento||"Sin registro"],
+    ["Fecha de recepción",registro.fechaConocimiento||"Sin registro"],
+    ["Hora de recepción",registro.horaConocimiento||"Sin registro"]
+  ];
+  document.getElementById("comprobanteDatos").innerHTML=datos.map(([label,value])=>'<dt>'+escapeHtml(label)+'</dt><dd>'+escapeHtml(value)+'</dd>').join('');
+  comprobanteOrigen=origen||document.activeElement;
+  document.getElementById("modalRegistros").style.display="none";
+  document.getElementById("modalComprobante").style.display="flex";
+  document.getElementById("cerrarComprobante").focus();
+}
+function cerrarDetalleComprobante(){
+  document.getElementById("modalComprobante").style.display="none";
+  document.getElementById("modalRegistros").style.display="flex";
+  if(comprobanteOrigen?.isConnected)comprobanteOrigen.focus();
+}
+document.getElementById("modalComprobante").addEventListener("keydown",event=>{
+  if(event.key==="Escape"){event.preventDefault();cerrarDetalleComprobante();}
+  if(event.key==="Tab"){event.preventDefault();document.getElementById("cerrarComprobante").focus();}
+});
 function detalleConocimiento(registro){
   if(registro.tipo!=="Inasistencia")return "";
   if(!registro.asistenteConocimiento)return '<small style="display:block;margin-top:6px">Asistente que tomó conocimiento: sin registro</small>';
   return '<small style="display:block;margin-top:6px">Tomó conocimiento: '+escapeHtml(registro.asistenteConocimiento)+'<br>Fecha: '+escapeHtml(registro.fechaConocimiento||'Sin registro')+' · Hora: '+escapeHtml(registro.horaConocimiento||'Sin registro')+'</small>';
 }
-function mostrarRegistros(alumnoId,filtroTipo){const a=buscarAlumno(alumnoId);if(!a)return;let registros=filtroTipo==="inasistencia"?registrosPorAlumno(estado.inasistencias,alumnoId).map(x=>({...x,tipo:"Inasistencia",clase:"ina"})):filtroTipo==="atraso"?registrosPorAlumno(estado.atrasos,alumnoId).map(x=>({...x,tipo:"Atraso",clase:"atr"})):[];registros.sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));document.getElementById("registrosTitulo").textContent=`${filtroTipo==="atraso"?"Atrasos":"Inasistencias"} de ${a.nombre}`;const alerta=filtroTipo==="inasistencia"&&esAlertaTelefonica(a)?`<div class="alert-badge">⚠ Alerta de retiro: ${escapeHtml(textoAlertaTelefonica(a))}</div>`:"";document.getElementById("listaRegistros").innerHTML=alerta+(registros.length?registros.map(x=>`<div class="registro-item"><strong>${escapeHtml(x.fecha||"Sin fecha")}</strong><span class="tipo ${x.clase}">${x.tipo}${x.hora?" · "+escapeHtml(x.hora):""}</span><span>${escapeHtml(x.comentario||"Sin motivo registrado")}${detalleConocimiento(x)}</span><button class="btn-danger" onclick="borrarRegistro('${escapeAttr(x.id)}','${x.tipo}','${escapeAttr(alumnoId)}','${filtroTipo}')">Borrar</button></div>`).join(""): `<div class="empty">No hay ${filtroTipo==="atraso"?"atrasos":"inasistencias"} para este alumno.</div>`);document.getElementById("modalRegistros").style.display="flex"}
+function mostrarRegistros(alumnoId,filtroTipo){const a=buscarAlumno(alumnoId);if(!a)return;let registros=filtroTipo==="inasistencia"?registrosPorAlumno(estado.inasistencias,alumnoId).map(x=>({...x,tipo:"Inasistencia",clase:"ina"})):filtroTipo==="atraso"?registrosPorAlumno(estado.atrasos,alumnoId).map(x=>({...x,tipo:"Atraso",clase:"atr"})):[];registros.sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));document.getElementById("registrosTitulo").textContent=`${filtroTipo==="atraso"?"Atrasos":"Inasistencias"} de ${a.nombre}`;const alerta=filtroTipo==="inasistencia"&&esAlertaTelefonica(a)?`<div class="alert-badge">⚠ Alerta de retiro: ${escapeHtml(textoAlertaTelefonica(a))}</div>`:"";document.getElementById("listaRegistros").innerHTML=alerta+(registros.length?registros.map(x=>`<div class="registro-item"><strong>${escapeHtml(x.fecha||"Sin fecha")}</strong>${x.tipo==="Inasistencia"?`<button type="button" class="tipo ina ver-comprobante" data-comprobante-id="${escapeAttr(x.id)}" title="Ver datos del comprobante">Inasistencia</button>`:`<span class="tipo ${x.clase}">${x.tipo}${x.hora?" · "+escapeHtml(x.hora):""}</span>`}<span>${escapeHtml(x.comentario||"Sin motivo registrado")}</span><button class="btn-danger" onclick="borrarRegistro('${escapeAttr(x.id)}','${x.tipo}','${escapeAttr(alumnoId)}','${filtroTipo}')">Borrar</button></div>`).join(""): `<div class="empty">No hay ${filtroTipo==="atraso"?"atrasos":"inasistencias"} para este alumno.</div>`);document.getElementById("modalRegistros").style.display="flex"}
 async function borrarRegistro(id,tipo,alumnoId,filtroTipo){if(!confirm("¿Borrar este registro?"))return;await postData({action:"borrarRegistro",id,tipo});alerta("Registro borrado.");await cargarDatos(true);mostrarRegistros(alumnoId,filtroTipo)}
 function cerrarRegistros(){document.getElementById("modalRegistros").style.display="none"}
 
