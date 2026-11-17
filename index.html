@@ -810,7 +810,7 @@ tr:hover td {
       <div id="estadoGuardarCitacion" class="save-status" role="status" aria-live="polite"></div>
       <div class="modal-actions"><button id="btnGuardarCitacion" onclick="guardarCitacion()">Guardar citación</button></div>
     </section>
-    <section class="summary-panel" style="margin-top:16px"><h3>Citaciones registradas</h3><div class="table-wrap"><table><thead><tr><th>Curso</th><th>Fecha</th><th>Hora</th><th>Alumno</th><th>Apoderado o tutor</th><th>Profesor</th><th>Estado</th><th>Motivo</th><th>Medio</th></tr></thead><tbody id="tablaCitaciones"></tbody></table></div></section>
+    <section class="summary-panel" style="margin-top:16px"><h3>Citaciones registradas</h3><div class="table-wrap"><table><thead><tr><th>Curso</th><th>Fecha</th><th>Hora</th><th>Alumno</th><th>Apoderado o tutor</th><th>Profesor</th><th>Estado</th><th>Motivo</th><th>Medio</th><th>Acciones</th></tr></thead><tbody id="tablaCitaciones"></tbody></table></div></section>
   </section>
 
   <section class="view" id="asistenciaView">
@@ -995,6 +995,7 @@ let estado = {
 
 let cursoActual = CURSOS[0];
 let editCursoTouched = false;
+let citacionEditandoId = "";
 let moduloActual = localStorage.getItem("portalModuloEscuelaOriente") || "home";
 
 function normalizar(t) {
@@ -1189,7 +1190,7 @@ async function postData(payload) {
   }
 
   if (payload.action === "registrarCitacion") {
-    const id = `CIT-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
+    const id = payload.id || `CIT-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
     await db.collection("citaciones").doc(id).set({
       id,
       curso: payload.curso || "",
@@ -1205,6 +1206,11 @@ async function postData(payload) {
       creado,
       registradoPor: payload.registradoPor || ""
     });
+    return { ok:true };
+  }
+
+  if (payload.action === "borrarCitacion") {
+    await db.collection("citaciones").doc(String(payload.id)).delete();
     return { ok:true };
   }
 
@@ -1293,18 +1299,20 @@ function renderCitaciones(){
   const tbody=document.getElementById("tablaCitaciones");
   if(!tbody)return;
   const rows=estado.citaciones||[];
-  tbody.innerHTML=rows.length?rows.map(x=>`<tr><td>${escapeHtml(x.curso||"Sin curso")}</td><td>${escapeHtml(x.fecha||"Sin fecha")}</td><td>${escapeHtml(x.hora||"Sin hora")}</td><td>${escapeHtml(x.alumno||"Sin alumno")}</td><td>${escapeHtml(x.apoderado||"Sin registro")}</td><td>${escapeHtml(x.profesor||"Sin registro")}</td><td>${escapeHtml(x.estado||"Pendiente")}</td><td>${escapeHtml(x.motivo||x.observaciones||"Sin detalle")}</td><td>${escapeHtml(x.medio||"Sin registro")}</td></tr>`).join(""):"<tr><td colspan=\"9\" class=\"empty\">No hay citaciones registradas.</td></tr>";
+  tbody.innerHTML=rows.length?rows.map(x=>`<tr><td>${escapeHtml(x.curso||"Sin curso")}</td><td>${escapeHtml(x.fecha||"Sin fecha")}</td><td>${escapeHtml(x.hora||"Sin hora")}</td><td>${escapeHtml(x.alumno||"Sin alumno")}</td><td>${escapeHtml(x.apoderado||"Sin registro")}</td><td>${escapeHtml(x.profesor||"Sin registro")}</td><td>${escapeHtml(x.estado||"Pendiente")}</td><td>${escapeHtml(x.motivo||x.observaciones||"Sin detalle")}</td><td>${escapeHtml(x.medio||"Sin registro")}</td><td><button class="btn-sec" type="button" onclick="editarCitacion('${escapeAttr(x.id)}')">Modificar</button> <button class="btn-danger" type="button" onclick="borrarCitacion('${escapeAttr(x.id)}')">Borrar</button></td></tr>`).join(""):"<tr><td colspan=\"10\" class=\"empty\">No hay citaciones registradas.</td></tr>";
 }
 
 function estadoCitacion(mensaje,tipo){const box=document.getElementById("estadoGuardarCitacion"),button=document.getElementById("btnGuardarCitacion");box.className="save-status visible "+(tipo||"");box.innerHTML=tipo==="saving"?`<span class="spinner"></span>${escapeHtml(mensaje)}`:(tipo==="done"?`✓ ${escapeHtml(mensaje)}`:`⚠ ${escapeHtml(mensaje)}`);if(button)button.disabled=tipo==="saving";}
 
 async function guardarCitacion(){
   const val=id=>document.getElementById(id).value.trim();
-  const payload={action:"registrarCitacion",curso:val("citacionCurso"),apoderado:val("citacionApoderado"),alumno:val("citacionAlumno"),profesor:val("citacionProfesor"),fecha:val("citacionFecha"),hora:val("citacionHora"),medio:val("citacionMedio"),estado:val("citacionEstado"),motivo:val("citacionMotivo"),observaciones:val("citacionObservaciones"),registradoPor:val("registradoPor")};
+  const payload={action:"registrarCitacion",id:citacionEditandoId,curso:val("citacionCurso"),apoderado:val("citacionApoderado"),alumno:val("citacionAlumno"),profesor:val("citacionProfesor"),fecha:val("citacionFecha"),hora:val("citacionHora"),medio:val("citacionMedio"),estado:val("citacionEstado"),motivo:val("citacionMotivo"),observaciones:val("citacionObservaciones"),registradoPor:val("registradoPor")};
   estadoCitacion("Guardando citación en Firebase…","saving");
   try{
     await Promise.race([postData(payload),new Promise((_,reject)=>setTimeout(()=>reject(new Error("Firebase no respondió en 20 segundos")),20000))]);
-    estadoCitacion("Citación guardada en Firebase.","done");
+    estadoCitacion(citacionEditandoId?"Citación modificada en Firebase.":"Citación guardada en Firebase.","done");
+    citacionEditandoId="";
+    document.getElementById("btnGuardarCitacion").textContent="Guardar citación";
     ["citacionApoderado","citacionAlumno","citacionProfesor","citacionFecha","citacionHora","citacionMotivo","citacionObservaciones"].forEach(id=>document.getElementById(id).value="");
     document.getElementById("citacionAlumnoSelector").value="";
     document.getElementById("citacionAlumnoBusqueda").value="";
@@ -1312,6 +1320,27 @@ async function guardarCitacion(){
     await cargarDatos(true);
     renderCitaciones();
   }catch(error){estadoCitacion("No se pudo guardar: "+(error.message||error),"error");}
+}
+
+function editarCitacion(id){
+  const x=(estado.citaciones||[]).find(r=>String(r.id)===String(id));
+  if(!x)return;
+  citacionEditandoId=String(id);
+  document.getElementById("citacionCurso").value=x.curso||"";
+  actualizarAlumnosCitacion();
+  ["Apoderado","Alumno","Profesor","Fecha","Hora","Motivo","Observaciones"].forEach(k=>{const el=document.getElementById("citacion"+k);if(el)el.value=x[k.toLowerCase()]||""});
+  document.getElementById("citacionMedio").value=x.medio||"Presencial";
+  document.getElementById("citacionEstado").value=x.estado||"Pendiente";
+  document.getElementById("citacionAlumnoBusqueda").value=x.alumno||"";
+  document.getElementById("citacionFormPanel").hidden=false;
+  document.getElementById("btnGuardarCitacion").textContent="Guardar cambios";
+  document.getElementById("citacionFormPanel").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+async function borrarCitacion(id){
+  if(!confirm("¿Borrar esta citación?"))return;
+  try{await postData({action:"borrarCitacion",id});alerta("Citación borrada.");await cargarDatos(true);renderCitaciones();}
+  catch(error){alerta("No se pudo borrar la citación: "+(error.message||error),"error");}
 }
 
 function abrirModulo(mod) {
