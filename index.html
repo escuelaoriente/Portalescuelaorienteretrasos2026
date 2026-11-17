@@ -807,6 +807,7 @@ tr:hover td {
         <textarea id="citacionMotivo" placeholder="Motivo de la citación"></textarea>
         <textarea id="citacionObservaciones" placeholder="Acuerdos u observaciones"></textarea>
       </div>
+      <div id="citacionHistorialAlumno" class="save-status visible" style="margin-top:10px" aria-live="polite"></div>
       <div id="estadoGuardarCitacion" class="save-status" role="status" aria-live="polite"></div>
       <div class="modal-actions"><button id="btnGuardarCitacion" onclick="guardarCitacion()">Guardar citación</button></div>
     </section>
@@ -1323,6 +1324,7 @@ function limpiarFormularioCitacion(){
   const medio=document.getElementById("citacionMedio"); if(medio)medio.value="Presencial";
   const estadoCit=document.getElementById("citacionEstado"); if(estadoCit)estadoCit.value="Pendiente";
   const panel=document.getElementById("citacionFormPanel"); if(panel)panel.hidden=true;
+  const historial=document.getElementById("citacionHistorialAlumno"); if(historial){historial.className="save-status";historial.textContent="";}
   const boton=document.getElementById("btnGuardarCitacion"); if(boton)boton.textContent="Guardar citación";
 }
 
@@ -1414,11 +1416,20 @@ function seleccionarAlumnoCitacion(){
   document.getElementById("citacionAlumnoBusqueda").value=alumno?.nombre||"";
   document.getElementById("citacionFormPanel").hidden=!alumno;
   if(alumno){
+    actualizarContadorCitaciones(alumno.nombre);
     const apoderado=document.getElementById("citacionApoderado");
     if(!apoderado.value)apoderado.value=alumno.apoderado||"";
     document.getElementById("citacionFecha").value ||= new Date().toISOString().slice(0,10);
     document.getElementById("citacionHora").value ||= new Date().toTimeString().slice(0,5);
   }
+}
+
+function actualizarContadorCitaciones(nombre){
+  const box=document.getElementById("citacionHistorialAlumno");
+  if(!box)return;
+  const total=(estado.citaciones||[]).filter(x=>normalizar(x.alumno)===normalizar(nombre)).length;
+  box.className="save-status visible done";
+  box.textContent=`Este alumno tiene ${total} citación${total===1?"":"es"} de apoderado registrada${total===1?"":"s"}.`;
 }
 
 function buscarAlumnoCitacion(){
