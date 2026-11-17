@@ -815,6 +815,9 @@ tr:hover td {
       <h3>Buscar alumno y ver citaciones</h3>
       <label>Buscar alumno<input id="buscarHistorialCitacion" list="historialAlumnosLista" type="search" placeholder="Escriba el nombre del alumno" oninput="renderHistorialCitacionAlumno()"><datalist id="historialAlumnosLista"></datalist></label>
       <div id="resultadoHistorialCitacion" class="save-status" style="margin-top:10px" aria-live="polite"></div>
+      <div id="detalleHistorialCitacion" class="table-wrap" style="margin-top:12px;display:none"></div>
+      <h3 style="margin-top:18px">Otras citaciones registradas recientes</h3>
+      <div id="citacionesRecientes" class="table-wrap"></div>
     </section>
     <section class="summary-panel" style="margin-top:16px"><h3>Citaciones registradas</h3><div class="table-wrap"><table><thead><tr><th>Curso</th><th>Fecha</th><th>Hora</th><th>Alumno</th><th>Apoderado o tutor</th><th>Profesor</th><th>Estado</th><th>Motivo</th><th>Medio</th><th>Acciones</th></tr></thead><tbody id="tablaCitaciones"></tbody></table></div></section>
   </section>
@@ -1316,12 +1319,25 @@ function renderHistorialCitacionAlumno(){
   const input=document.getElementById("buscarHistorialCitacion");
   if(!box||!input)return;
   const texto=normalizar(input.value);
-  if(!texto){box.className="save-status";box.textContent="";return;}
+  const detalle=document.getElementById("detalleHistorialCitacion");
+  if(!texto){box.className="save-status";box.textContent="";if(detalle)detalle.style.display="none";renderCitacionesRecientes("");return;}
   const alumno=alumnosActivos().find(a=>normalizar(a.nombre)===texto)||alumnosActivos().find(a=>normalizar(a.nombre).includes(texto));
   const nombre=alumno?.nombre||input.value.trim();
   const registros=(estado.citaciones||[]).filter(x=>normalizar(x.alumno)===normalizar(nombre));
   box.className="save-status visible done";
   box.textContent=`${nombre}: ${registros.length} citación${registros.length===1?"":"es"} de apoderado registrada${registros.length===1?"":"s"}.`;
+  if(detalle){
+    detalle.style.display="block";
+    detalle.innerHTML=registros.length?`<table><thead><tr><th>Fecha</th><th>Hora</th><th>Apoderado</th><th>Profesor</th><th>Estado</th><th>Motivo</th></tr></thead><tbody>${registros.slice().sort((a,b)=>String(b.fecha||"").localeCompare(String(a.fecha||""))).map(x=>`<tr><td>${escapeHtml(x.fecha||"Sin fecha")}</td><td>${escapeHtml(x.hora||"Sin hora")}</td><td>${escapeHtml(x.apoderado||"Sin registro")}</td><td>${escapeHtml(x.profesor||"Sin registro")}</td><td>${escapeHtml(x.estado||"Pendiente")}</td><td>${escapeHtml(x.motivo||x.observaciones||"Sin detalle")}</td></tr>`).join("")}</tbody></table>`:`<div class="empty">No hay citaciones para este alumno.</div>`;
+  }
+  renderCitacionesRecientes(nombre);
+}
+
+function renderCitacionesRecientes(excluirNombre){
+  const box=document.getElementById("citacionesRecientes");
+  if(!box)return;
+  const recientes=(estado.citaciones||[]).filter(x=>!excluirNombre||normalizar(x.alumno)!==normalizar(excluirNombre)).slice().sort((a,b)=>String(b.fecha||"").localeCompare(String(a.fecha||""))).slice(0,10);
+  box.innerHTML=recientes.length?`<table><thead><tr><th>Alumno</th><th>Curso</th><th>Fecha</th><th>Apoderado</th><th>Estado</th></tr></thead><tbody>${recientes.map(x=>`<tr><td>${escapeHtml(x.alumno||"Sin alumno")}</td><td>${escapeHtml(x.curso||"Sin curso")}</td><td>${escapeHtml(x.fecha||"Sin fecha")}</td><td>${escapeHtml(x.apoderado||"Sin registro")}</td><td>${escapeHtml(x.estado||"Pendiente")}</td></tr>`).join("")}</tbody></table>`:`<div class="empty">No hay citaciones recientes registradas.</div>`;
 }
 
 function estadoCitacion(mensaje,tipo){const box=document.getElementById("estadoGuardarCitacion"),button=document.getElementById("btnGuardarCitacion");box.className="save-status visible "+(tipo||"");box.innerHTML=tipo==="saving"?`<span class="spinner"></span>${escapeHtml(mensaje)}`:(tipo==="done"?`✓ ${escapeHtml(mensaje)}`:`⚠ ${escapeHtml(mensaje)}`);if(button)button.disabled=tipo==="saving";}
