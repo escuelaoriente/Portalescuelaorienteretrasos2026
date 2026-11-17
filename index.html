@@ -762,6 +762,11 @@ tr:hover td {
         <h2>Descarga de registros</h2>
         <p>Genera, descarga o imprime un informe completo por curso o por alumno.</p>
       </div>
+      <div class="portal-card" onclick="abrirModulo('citaciones')">
+        <div class="icon">📅</div>
+        <h2>Registro de citación a apoderados</h2>
+        <p>Registra a quién se citó, el alumno, profesor responsable, fecha, hora y resultado.</p>
+      </div>
     </div>
 
     <section class="kpis">
@@ -782,6 +787,26 @@ tr:hover td {
   </section>
 
   <section class="view" id="informesView"><div class="top-actions"><button class="btn-sec" onclick="volverInicio()">⬅ Volver al portal</button><h2>Descarga de registros</h2></div><section class="summary-panel"><div class="report-grid"><label>Curso<select id="informeCurso" onchange="actualizarInformeAlumnos()"><option value="todos">Todos los cursos</option></select></label><label>Alumno<select id="informeAlumno" onchange="renderInforme()"><option value="todos">Todos los alumnos</option></select></label><label style="grid-column:1 / -1">Buscar por nombre<input id="informeBuscarNombre" type="search" placeholder="Escriba el nombre del alumno..." oninput="renderInforme()"></label></div><div class="report-actions"><button onclick="descargarInformeCSV()">⬇ Descargar CSV</button><button class="btn-sec" onclick="imprimirInforme()">🖨 Imprimir informe</button></div></section><div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Alumno</th><th>Curso</th><th>Inasistencias</th><th>Fechas</th><th>Atrasos</th><th>Fechas</th></tr></thead><tbody id="tablaInforme"></tbody></table></div></section>
+
+  <section class="view" id="citacionesView">
+    <div class="top-actions"><button class="btn-sec" onclick="volverInicio()">⬅ Volver al portal</button><h2>Registro de citación a apoderados</h2></div>
+    <section class="summary-panel">
+      <div class="form-grid">
+        <input id="citacionApoderado" placeholder="Nombre del apoderado o tutor">
+        <input id="citacionAlumno" placeholder="Nombre del alumno">
+        <input id="citacionProfesor" placeholder="Profesor que cita">
+        <input id="citacionFecha" type="date">
+        <input id="citacionHora" type="time">
+        <select id="citacionMedio"><option value="Presencial">Presencial</option><option value="Telefónica">Telefónica</option><option value="Correo electrónico">Correo electrónico</option><option value="Agenda escolar">Agenda escolar</option></select>
+        <select id="citacionEstado"><option value="Pendiente">Pendiente</option><option value="Confirmada">Confirmada</option><option value="Realizada">Realizada</option><option value="No asistió">No asistió</option><option value="Cancelada">Cancelada</option></select>
+        <textarea id="citacionMotivo" placeholder="Motivo de la citación"></textarea>
+        <textarea id="citacionObservaciones" placeholder="Acuerdos u observaciones"></textarea>
+      </div>
+      <div id="estadoGuardarCitacion" class="save-status" role="status" aria-live="polite"></div>
+      <div class="modal-actions"><button id="btnGuardarCitacion" onclick="guardarCitacion()">Guardar citación</button></div>
+    </section>
+    <section class="summary-panel" style="margin-top:16px"><h3>Citaciones registradas</h3><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Hora</th><th>Alumno</th><th>Apoderado o tutor</th><th>Profesor</th><th>Estado</th><th>Motivo</th><th>Medio</th></tr></thead><tbody id="tablaCitaciones"></tbody></table></div></section>
+  </section>
 
   <section class="view" id="asistenciaView">
     <div class="top-actions">
@@ -959,7 +984,8 @@ let estado = {
   alumnos: [],
   inasistencias: [],
   atrasos: [],
-  comentarios: []
+  comentarios: [],
+  citaciones: []
 };
 
 let cursoActual = CURSOS[0];
@@ -1045,21 +1071,23 @@ async function cargarDatos(force=false) {
   try {
     iniciarFirebase();
 
-    const [alumnos, inasistencias, atrasos, comentarios] = await Promise.all([
+    const [alumnos, inasistencias, atrasos, comentarios, citaciones] = await Promise.all([
       cargarColeccion("alumnos"),
       cargarColeccion("inasistencias"),
       cargarColeccion("atrasos"),
-      cargarColeccion("comentarios")
+      cargarColeccion("comentarios"),
+      cargarColeccion("citaciones")
     ]);
 
     estado.alumnos = ordenarPorCampo(alumnos, "curso", "nombre");
     estado.inasistencias = ordenarPorCampo(inasistencias, "fecha", "creado").reverse();
     estado.atrasos = ordenarPorCampo(atrasos, "fecha", "creado").reverse();
     estado.comentarios = ordenarPorCampo(comentarios, "creado", "nombre").reverse();
+    estado.citaciones = ordenarPorCampo(citaciones, "fecha", "hora").reverse();
 
-    actualizarMedidorBase(alumnos.length + inasistencias.length + atrasos.length + comentarios.length);
+    actualizarMedidorBase(alumnos.length + inasistencias.length + atrasos.length + comentarios.length + citaciones.length);
     actualizarResumenEncabezado();
-    actualizarEstimadoDiario({alumnos,inasistencias,atrasos,comentarios}, alumnos.length + inasistencias.length + atrasos.length + comentarios.length);
+    actualizarEstimadoDiario({alumnos,inasistencias,atrasos,comentarios,citaciones}, alumnos.length + inasistencias.length + atrasos.length + comentarios.length + citaciones.length);
 
     document.getElementById("lastUpdate").textContent = "Actualizado: " + new Date().toLocaleTimeString("es-CL");
     if(dot) dot.classList.add("ready"); if(syncText) syncText.textContent="Datos sincronizados";
@@ -1138,6 +1166,25 @@ async function postData(payload) {
       fecha: payload.fecha || "",
       hora: payload.hora || hora,
       comentario: payload.comentario || "",
+      creado,
+      registradoPor: payload.registradoPor || ""
+    });
+    return { ok:true };
+  }
+
+  if (payload.action === "registrarCitacion") {
+    const id = await siguienteId("citaciones");
+    await db.collection("citaciones").doc(id).set({
+      id,
+      apoderado: payload.apoderado || "",
+      alumno: payload.alumno || "",
+      profesor: payload.profesor || "",
+      fecha: payload.fecha || "",
+      hora: payload.hora || "",
+      medio: payload.medio || "",
+      estado: payload.estado || "Pendiente",
+      motivo: payload.motivo || "",
+      observaciones: payload.observaciones || "",
       creado,
       registradoPor: payload.registradoPor || ""
     });
@@ -1225,6 +1272,28 @@ function renderHome() {
   document.getElementById("homeAlertas").textContent = alumnosActivos().filter(esAlertaTelefonica).length;
 }
 
+function renderCitaciones(){
+  const tbody=document.getElementById("tablaCitaciones");
+  if(!tbody)return;
+  const rows=estado.citaciones||[];
+  tbody.innerHTML=rows.length?rows.map(x=>`<tr><td>${escapeHtml(x.fecha||"Sin fecha")}</td><td>${escapeHtml(x.hora||"Sin hora")}</td><td>${escapeHtml(x.alumno||"Sin alumno")}</td><td>${escapeHtml(x.apoderado||"Sin registro")}</td><td>${escapeHtml(x.profesor||"Sin registro")}</td><td>${escapeHtml(x.estado||"Pendiente")}</td><td>${escapeHtml(x.motivo||x.observaciones||"Sin detalle")}</td><td>${escapeHtml(x.medio||"Sin registro")}</td></tr>`).join(""):"<tr><td colspan=\"8\" class=\"empty\">No hay citaciones registradas.</td></tr>";
+}
+
+function estadoCitacion(mensaje,tipo){const box=document.getElementById("estadoGuardarCitacion"),button=document.getElementById("btnGuardarCitacion");box.className="save-status visible "+(tipo||"");box.innerHTML=tipo==="saving"?`<span class="spinner"></span>${escapeHtml(mensaje)}`:(tipo==="done"?`✓ ${escapeHtml(mensaje)}`:`⚠ ${escapeHtml(mensaje)}`);if(button)button.disabled=tipo==="saving";}
+
+async function guardarCitacion(){
+  const val=id=>document.getElementById(id).value.trim();
+  const payload={action:"registrarCitacion",apoderado:val("citacionApoderado"),alumno:val("citacionAlumno"),profesor:val("citacionProfesor"),fecha:val("citacionFecha"),hora:val("citacionHora"),medio:val("citacionMedio"),estado:val("citacionEstado"),motivo:val("citacionMotivo"),observaciones:val("citacionObservaciones"),registradoPor:val("registradoPor")};
+  estadoCitacion("Guardando citación en Firebase…","saving");
+  try{
+    await Promise.race([postData(payload),new Promise((_,reject)=>setTimeout(()=>reject(new Error("Firebase no respondió en 20 segundos")),20000))]);
+    estadoCitacion("Citación guardada en Firebase.","done");
+    ["citacionApoderado","citacionAlumno","citacionProfesor","citacionFecha","citacionHora","citacionMotivo","citacionObservaciones"].forEach(id=>document.getElementById(id).value="");
+    await cargarDatos(true);
+    renderCitaciones();
+  }catch(error){estadoCitacion("No se pudo guardar: "+(error.message||error),"error");}
+}
+
 function abrirModulo(mod) {
   moduloActual = mod;
   localStorage.setItem("portalModuloEscuelaOriente", mod);
@@ -1239,6 +1308,8 @@ function mostrarModuloGuardado() {
   document.getElementById("informesView").style.display = moduloActual === "informes" ? "block" : "none";
   document.getElementById("asistenciaView").style.display = moduloActual === "asistencia" ? "block" : "none";
   document.getElementById("telefonicoView").style.display = moduloActual === "telefonico" ? "block" : "none";
+  document.getElementById("citacionesView").style.display = moduloActual === "citaciones" ? "block" : "none";
+  if(moduloActual === "citaciones") renderCitaciones();
 }
 
 function volverInicio() {
