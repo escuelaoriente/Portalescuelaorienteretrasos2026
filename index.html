@@ -811,6 +811,11 @@ tr:hover td {
       <div id="estadoGuardarCitacion" class="save-status" role="status" aria-live="polite"></div>
       <div class="modal-actions"><button id="btnGuardarCitacion" onclick="guardarCitacion()">Guardar citación</button></div>
     </section>
+    <section class="summary-panel" style="margin-top:16px">
+      <h3>Buscar alumno y ver citaciones</h3>
+      <label>Buscar alumno<input id="buscarHistorialCitacion" list="historialAlumnosLista" type="search" placeholder="Escriba el nombre del alumno" oninput="renderHistorialCitacionAlumno()"><datalist id="historialAlumnosLista"></datalist></label>
+      <div id="resultadoHistorialCitacion" class="save-status" style="margin-top:10px" aria-live="polite"></div>
+    </section>
     <section class="summary-panel" style="margin-top:16px"><h3>Citaciones registradas</h3><div class="table-wrap"><table><thead><tr><th>Curso</th><th>Fecha</th><th>Hora</th><th>Alumno</th><th>Apoderado o tutor</th><th>Profesor</th><th>Estado</th><th>Motivo</th><th>Medio</th><th>Acciones</th></tr></thead><tbody id="tablaCitaciones"></tbody></table></div></section>
   </section>
 
@@ -1301,6 +1306,22 @@ function renderCitaciones(){
   if(!tbody)return;
   const rows=estado.citaciones||[];
   tbody.innerHTML=rows.length?rows.map(x=>`<tr><td>${escapeHtml(x.curso||"Sin curso")}</td><td>${escapeHtml(x.fecha||"Sin fecha")}</td><td>${escapeHtml(x.hora||"Sin hora")}</td><td>${escapeHtml(x.alumno||"Sin alumno")}</td><td>${escapeHtml(x.apoderado||"Sin registro")}</td><td>${escapeHtml(x.profesor||"Sin registro")}</td><td>${escapeHtml(x.estado||"Pendiente")}</td><td>${escapeHtml(x.motivo||x.observaciones||"Sin detalle")}</td><td>${escapeHtml(x.medio||"Sin registro")}</td><td><button class="btn-sec" type="button" onclick="editarCitacion('${escapeAttr(x.id)}')">Modificar</button> <button class="btn-danger" type="button" onclick="borrarCitacion('${escapeAttr(x.id)}')">Borrar</button></td></tr>`).join(""):"<tr><td colspan=\"10\" class=\"empty\">No hay citaciones registradas.</td></tr>";
+  const lista=document.getElementById("historialAlumnosLista");
+  if(lista)lista.innerHTML=alumnosActivos().sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),'es')).map(a=>`<option value="${escapeHtml(a.nombre)}"></option>`).join("");
+  renderHistorialCitacionAlumno();
+}
+
+function renderHistorialCitacionAlumno(){
+  const box=document.getElementById("resultadoHistorialCitacion");
+  const input=document.getElementById("buscarHistorialCitacion");
+  if(!box||!input)return;
+  const texto=normalizar(input.value);
+  if(!texto){box.className="save-status";box.textContent="";return;}
+  const alumno=alumnosActivos().find(a=>normalizar(a.nombre)===texto)||alumnosActivos().find(a=>normalizar(a.nombre).includes(texto));
+  const nombre=alumno?.nombre||input.value.trim();
+  const registros=(estado.citaciones||[]).filter(x=>normalizar(x.alumno)===normalizar(nombre));
+  box.className="save-status visible done";
+  box.textContent=`${nombre}: ${registros.length} citación${registros.length===1?"":"es"} de apoderado registrada${registros.length===1?"":"s"}.`;
 }
 
 function estadoCitacion(mensaje,tipo){const box=document.getElementById("estadoGuardarCitacion"),button=document.getElementById("btnGuardarCitacion");box.className="save-status visible "+(tipo||"");box.innerHTML=tipo==="saving"?`<span class="spinner"></span>${escapeHtml(mensaje)}`:(tipo==="done"?`✓ ${escapeHtml(mensaje)}`:`⚠ ${escapeHtml(mensaje)}`);if(button)button.disabled=tipo==="saving";}
