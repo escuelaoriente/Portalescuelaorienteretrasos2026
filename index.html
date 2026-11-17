@@ -791,9 +791,14 @@ tr:hover td {
   <section class="view" id="citacionesView">
     <div class="top-actions"><button class="btn-sec" onclick="volverInicio()">⬅ Volver al portal</button><h2>Registro de citación a apoderados</h2></div>
     <section class="summary-panel">
+      <h3>Seleccione un curso y luego un alumno</h3>
+      <div class="form-grid"><select id="citacionCurso" onchange="actualizarAlumnosCitacion()"><option value="">Seleccione un curso</option></select><select id="citacionAlumnoSelector" onchange="seleccionarAlumnoCitacion()"><option value="">Seleccione un alumno</option></select></div>
+    </section>
+    <section class="summary-panel" id="citacionFormPanel" hidden>
+      <h3>Datos de la citación</h3>
       <div class="form-grid">
         <input id="citacionApoderado" placeholder="Nombre del apoderado o tutor">
-        <input id="citacionAlumno" placeholder="Nombre del alumno">
+        <input id="citacionAlumno" placeholder="Nombre del alumno" readonly>
         <input id="citacionProfesor" placeholder="Profesor que cita">
         <input id="citacionFecha" type="date">
         <input id="citacionHora" type="time">
@@ -805,7 +810,7 @@ tr:hover td {
       <div id="estadoGuardarCitacion" class="save-status" role="status" aria-live="polite"></div>
       <div class="modal-actions"><button id="btnGuardarCitacion" onclick="guardarCitacion()">Guardar citación</button></div>
     </section>
-    <section class="summary-panel" style="margin-top:16px"><h3>Citaciones registradas</h3><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Hora</th><th>Alumno</th><th>Apoderado o tutor</th><th>Profesor</th><th>Estado</th><th>Motivo</th><th>Medio</th></tr></thead><tbody id="tablaCitaciones"></tbody></table></div></section>
+    <section class="summary-panel" style="margin-top:16px"><h3>Citaciones registradas</h3><div class="table-wrap"><table><thead><tr><th>Curso</th><th>Fecha</th><th>Hora</th><th>Alumno</th><th>Apoderado o tutor</th><th>Profesor</th><th>Estado</th><th>Motivo</th><th>Medio</th></tr></thead><tbody id="tablaCitaciones"></tbody></table></div></section>
   </section>
 
   <section class="view" id="asistenciaView">
@@ -1176,6 +1181,7 @@ async function postData(payload) {
     const id = await siguienteId("citaciones");
     await db.collection("citaciones").doc(id).set({
       id,
+      curso: payload.curso || "",
       apoderado: payload.apoderado || "",
       alumno: payload.alumno || "",
       profesor: payload.profesor || "",
@@ -1276,19 +1282,21 @@ function renderCitaciones(){
   const tbody=document.getElementById("tablaCitaciones");
   if(!tbody)return;
   const rows=estado.citaciones||[];
-  tbody.innerHTML=rows.length?rows.map(x=>`<tr><td>${escapeHtml(x.fecha||"Sin fecha")}</td><td>${escapeHtml(x.hora||"Sin hora")}</td><td>${escapeHtml(x.alumno||"Sin alumno")}</td><td>${escapeHtml(x.apoderado||"Sin registro")}</td><td>${escapeHtml(x.profesor||"Sin registro")}</td><td>${escapeHtml(x.estado||"Pendiente")}</td><td>${escapeHtml(x.motivo||x.observaciones||"Sin detalle")}</td><td>${escapeHtml(x.medio||"Sin registro")}</td></tr>`).join(""):"<tr><td colspan=\"8\" class=\"empty\">No hay citaciones registradas.</td></tr>";
+  tbody.innerHTML=rows.length?rows.map(x=>`<tr><td>${escapeHtml(x.curso||"Sin curso")}</td><td>${escapeHtml(x.fecha||"Sin fecha")}</td><td>${escapeHtml(x.hora||"Sin hora")}</td><td>${escapeHtml(x.alumno||"Sin alumno")}</td><td>${escapeHtml(x.apoderado||"Sin registro")}</td><td>${escapeHtml(x.profesor||"Sin registro")}</td><td>${escapeHtml(x.estado||"Pendiente")}</td><td>${escapeHtml(x.motivo||x.observaciones||"Sin detalle")}</td><td>${escapeHtml(x.medio||"Sin registro")}</td></tr>`).join(""):"<tr><td colspan=\"9\" class=\"empty\">No hay citaciones registradas.</td></tr>";
 }
 
 function estadoCitacion(mensaje,tipo){const box=document.getElementById("estadoGuardarCitacion"),button=document.getElementById("btnGuardarCitacion");box.className="save-status visible "+(tipo||"");box.innerHTML=tipo==="saving"?`<span class="spinner"></span>${escapeHtml(mensaje)}`:(tipo==="done"?`✓ ${escapeHtml(mensaje)}`:`⚠ ${escapeHtml(mensaje)}`);if(button)button.disabled=tipo==="saving";}
 
 async function guardarCitacion(){
   const val=id=>document.getElementById(id).value.trim();
-  const payload={action:"registrarCitacion",apoderado:val("citacionApoderado"),alumno:val("citacionAlumno"),profesor:val("citacionProfesor"),fecha:val("citacionFecha"),hora:val("citacionHora"),medio:val("citacionMedio"),estado:val("citacionEstado"),motivo:val("citacionMotivo"),observaciones:val("citacionObservaciones"),registradoPor:val("registradoPor")};
+  const payload={action:"registrarCitacion",curso:val("citacionCurso"),apoderado:val("citacionApoderado"),alumno:val("citacionAlumno"),profesor:val("citacionProfesor"),fecha:val("citacionFecha"),hora:val("citacionHora"),medio:val("citacionMedio"),estado:val("citacionEstado"),motivo:val("citacionMotivo"),observaciones:val("citacionObservaciones"),registradoPor:val("registradoPor")};
   estadoCitacion("Guardando citación en Firebase…","saving");
   try{
     await Promise.race([postData(payload),new Promise((_,reject)=>setTimeout(()=>reject(new Error("Firebase no respondió en 20 segundos")),20000))]);
     estadoCitacion("Citación guardada en Firebase.","done");
     ["citacionApoderado","citacionAlumno","citacionProfesor","citacionFecha","citacionHora","citacionMotivo","citacionObservaciones"].forEach(id=>document.getElementById(id).value="");
+    document.getElementById("citacionAlumnoSelector").value="";
+    document.getElementById("citacionFormPanel").hidden=true;
     await cargarDatos(true);
     renderCitaciones();
   }catch(error){estadoCitacion("No se pudo guardar: "+(error.message||error),"error");}
@@ -1309,7 +1317,7 @@ function mostrarModuloGuardado() {
   document.getElementById("asistenciaView").style.display = moduloActual === "asistencia" ? "block" : "none";
   document.getElementById("telefonicoView").style.display = moduloActual === "telefonico" ? "block" : "none";
   document.getElementById("citacionesView").style.display = moduloActual === "citaciones" ? "block" : "none";
-  if(moduloActual === "citaciones") renderCitaciones();
+  if(moduloActual === "citaciones"){actualizarAlumnosCitacion();renderCitaciones();}
 }
 
 function volverInicio() {
@@ -1321,6 +1329,8 @@ function volverInicio() {
 
 function llenarSelects() {
   const options = CURSOS.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+  const citacionCurso=document.getElementById("citacionCurso");
+  if(citacionCurso && !citacionCurso.dataset.ready){citacionCurso.innerHTML='<option value="">Seleccione un curso</option>'+options;citacionCurso.dataset.ready="1";}
 
   ["nuevoCurso","editCurso","telCurso"].forEach(id => {
     const el = document.getElementById(id);
@@ -1331,6 +1341,27 @@ function llenarSelects() {
   const resumen=document.getElementById("resumenCurso"); if(resumen) resumen.innerHTML=options;
   const informe=document.getElementById("informeCurso"); if(informe) informe.innerHTML=`<option value="todos">Todos los cursos</option>${options}`;
   actualizarInformeAlumnos();
+}
+
+function actualizarAlumnosCitacion(){
+  const curso=document.getElementById("citacionCurso")?.value||"";
+  const select=document.getElementById("citacionAlumnoSelector");
+  if(!select)return;
+  const alumnos=alumnosActivos().filter(a=>!curso||a.curso===curso).sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),'es'));
+  select.innerHTML='<option value="">Seleccione un alumno</option>'+alumnos.map(a=>`<option value="${escapeAttr(a.id)}">${escapeHtml(a.nombre)}</option>`).join("");
+}
+
+function seleccionarAlumnoCitacion(){
+  const id=document.getElementById("citacionAlumnoSelector")?.value||"";
+  const alumno=buscarAlumno(id);
+  document.getElementById("citacionAlumno").value=alumno?.nombre||"";
+  document.getElementById("citacionFormPanel").hidden=!alumno;
+  if(alumno){
+    const apoderado=document.getElementById("citacionApoderado");
+    if(!apoderado.value)apoderado.value=alumno.apoderado||"";
+    document.getElementById("citacionFecha").value ||= new Date().toISOString().slice(0,10);
+    document.getElementById("citacionHora").value ||= new Date().toTimeString().slice(0,5);
+  }
 }
 
 function renderCursos() {
