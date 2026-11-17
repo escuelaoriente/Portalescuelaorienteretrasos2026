@@ -924,7 +924,7 @@ tr:hover td {
 
 <div class="modal-bg" id="modalRegistros"><div class="modal"><div class="top-actions"><h2 id="registrosTitulo">Registros del alumno</h2><button class="btn-sec" onclick="cerrarRegistros()">Cerrar</button></div><div id="listaRegistros" class="registro-list"></div></div></div>
 <div class="modal-bg" id="modalComprobante" role="dialog" aria-modal="true" aria-labelledby="comprobanteTitulo"><div class="modal"><div class="top-actions"><h2 id="comprobanteTitulo">Detalle del comprobante de inasistencia</h2><button id="cerrarComprobante" class="btn-sec" onclick="cerrarDetalleComprobante()">Volver a registros</button></div><dl id="comprobanteDatos" class="comprobante-datos"></dl></div></div>
-<div class="modal-bg" id="modalRegistroForm"><div class="modal"><h2 id="registroFormTitulo">Registrar registro</h2><input type="hidden" id="registroFormAlumno"><input type="hidden" id="registroFormTipo"><label>Fecha<input type="date" id="registroFormFecha"></label><label id="registroHoraLabel" style="display:none;margin-top:10px">Hora<input type="time" id="registroFormHora"></label><label style="display:block;margin-top:10px">Motivo o justificación<textarea id="registroFormMotivo" placeholder="Escriba el motivo"></textarea></label><fieldset id="registroConocimiento" hidden style="margin:16px 0;padding:12px;border:1px solid var(--linea);border-radius:10px"><legend>Recepción del comprobante</legend><label>Nombre del inspector o asistente que lo recibió<input type="text" id="registroFormAsistente" maxlength="150" placeholder="Nombre y apellido"></label><label style="display:block;margin-top:10px">Fecha de recepción<input type="date" id="registroFormFechaConocimiento"></label><label style="display:block;margin-top:10px">Hora de recepción<input type="time" id="registroFormHoraConocimiento"></label></fieldset><div class="modal-actions"><button class="btn-sec" onclick="cerrarRegistroForm()">Cancelar</button><button onclick="guardarRegistroForm()">Guardar registro</button></div></div></div>
+<div class="modal-bg" id="modalRegistroForm"><div class="modal"><h2 id="registroFormTitulo">Registrar registro</h2><input type="hidden" id="registroFormAlumno"><input type="hidden" id="registroFormTipo"><label>Fecha<input type="date" id="registroFormFecha"></label><label id="registroHoraLabel" style="display:none;margin-top:10px">Hora<input type="time" id="registroFormHora"></label><label style="display:block;margin-top:10px">Motivo o justificación<textarea id="registroFormMotivo" placeholder="Escriba el motivo"></textarea></label><fieldset id="registroConocimiento" hidden style="margin:16px 0;padding:12px;border:1px solid var(--linea);border-radius:10px"><legend>Recepción del comprobante</legend><label>Nombre del inspector o asistente que lo recibió<input type="text" id="registroFormAsistente" maxlength="150" placeholder="Nombre y apellido"></label><label style="display:block;margin-top:10px">Nombre del apoderado o tutor que recepcionó la llamada<input type="text" id="registroFormApoderadoTutor" maxlength="150" placeholder="Nombre y apellido"></label><label style="display:block;margin-top:10px">Fecha de recepción<input type="date" id="registroFormFechaConocimiento"></label><label style="display:block;margin-top:10px">Hora de recepción<input type="time" id="registroFormHoraConocimiento"></label></fieldset><div class="modal-actions"><button class="btn-sec" onclick="cerrarRegistroForm()">Cancelar</button><button onclick="guardarRegistroForm()">Guardar registro</button></div></div></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
@@ -1114,6 +1114,7 @@ async function postData(payload) {
       fecha: payload.fecha || "",
       comentario: payload.comentario || "",
       asistenteConocimiento: payload.asistenteConocimiento || "",
+      apoderadoTutorConocimiento: payload.apoderadoTutorConocimiento || "",
       fechaConocimiento: payload.fechaConocimiento || "",
       horaConocimiento: payload.horaConocimiento || "",
       creado,
@@ -1519,6 +1520,7 @@ function abrirCalendario(id){const el=document.getElementById(id);if(!el)return;
 function abrirFormularioRegistro(alumnoId,tipo){const a=buscarAlumno(alumnoId);if(!a)return;document.getElementById("registroFormAlumno").value=alumnoId;document.getElementById("registroFormTipo").value=tipo;document.getElementById("registroFormFecha").value="";document.getElementById("registroFormHora").value="";document.getElementById("registroFormMotivo").value="";document.getElementById("registroFormTitulo").textContent=tipo==="inasistencia"?"Registrar inasistencia":"Registrar atraso";document.getElementById("registroHoraLabel").style.display=tipo==="atraso"?"block":"none";document.getElementById("registroConocimiento").hidden=tipo!=="inasistencia";
 const partes=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'America/Santiago',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date()).map(p=>[p.type,p.value]));
 document.getElementById("registroFormAsistente").value="";
+document.getElementById("registroFormApoderadoTutor").value="";
 document.getElementById("registroFormFechaConocimiento").value=partes.year+'-'+partes.month+'-'+partes.day;
 document.getElementById("registroFormHoraConocimiento").value=partes.hour+':'+partes.minute;
 document.getElementById("modalRegistroForm").style.display="flex"}
@@ -1532,10 +1534,11 @@ async function guardarRegistroForm(){
   const conocimiento={};
   if(tipo==="inasistencia"){
     conocimiento.asistenteConocimiento=valor("registroFormAsistente");
+    conocimiento.apoderadoTutorConocimiento=valor("registroFormApoderadoTutor");
     conocimiento.fechaConocimiento=valor("registroFormFechaConocimiento");
     conocimiento.horaConocimiento=valor("registroFormHoraConocimiento");
-    if(!conocimiento.asistenteConocimiento || !conocimiento.fechaConocimiento || !conocimiento.horaConocimiento)
-      return alerta("Complete el nombre del asistente, la fecha y la hora en que tomó conocimiento.","error");
+    if(!conocimiento.asistenteConocimiento || !conocimiento.apoderadoTutorConocimiento || !conocimiento.fechaConocimiento || !conocimiento.horaConocimiento)
+      return alerta("Complete el inspector o asistente, el apoderado o tutor, la fecha y la hora de recepción.","error");
   }
   const action=tipo==="inasistencia"?"registrarInasistencia":"registrarAtraso";
   try {
@@ -1782,6 +1785,7 @@ function abrirDetalleComprobante(id,origen){
     ["Fecha de inasistencia",registro.fecha||"Sin registro"],
     ["Motivo o justificación",registro.comentario||"Sin motivo registrado"],
     ["Inspector que recibió el comprobante",registro.asistenteConocimiento||"Sin registro"],
+    ["Apoderado o tutor que recepcionó la llamada",registro.apoderadoTutorConocimiento||"Sin registro"],
     ["Fecha de recepción",registro.fechaConocimiento||"Sin registro"],
     ["Hora de recepción",registro.horaConocimiento||"Sin registro"]
   ];
@@ -1803,7 +1807,7 @@ document.getElementById("modalComprobante").addEventListener("keydown",event=>{
 function detalleConocimiento(registro){
   if(registro.tipo!=="Inasistencia")return "";
   if(!registro.asistenteConocimiento)return '<small style="display:block;margin-top:6px">Asistente que tomó conocimiento: sin registro</small>';
-  return '<small style="display:block;margin-top:6px">Tomó conocimiento: '+escapeHtml(registro.asistenteConocimiento)+'<br>Fecha: '+escapeHtml(registro.fechaConocimiento||'Sin registro')+' · Hora: '+escapeHtml(registro.horaConocimiento||'Sin registro')+'</small>';
+  return '<small style="display:block;margin-top:6px">Inspector o asistente: '+escapeHtml(registro.asistenteConocimiento)+'<br>Apoderado o tutor: '+escapeHtml(registro.apoderadoTutorConocimiento||'Sin registro')+'<br>Fecha: '+escapeHtml(registro.fechaConocimiento||'Sin registro')+' · Hora: '+escapeHtml(registro.horaConocimiento||'Sin registro')+'</small>';
 }
 function mostrarRegistros(alumnoId,filtroTipo){const a=buscarAlumno(alumnoId);if(!a)return;let registros=filtroTipo==="inasistencia"?registrosPorAlumno(estado.inasistencias,alumnoId).map(x=>({...x,tipo:"Inasistencia",clase:"ina"})):filtroTipo==="atraso"?registrosPorAlumno(estado.atrasos,alumnoId).map(x=>({...x,tipo:"Atraso",clase:"atr"})):[];registros.sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));document.getElementById("registrosTitulo").textContent=`${filtroTipo==="atraso"?"Atrasos":"Inasistencias"} de ${a.nombre}`;const alerta=filtroTipo==="inasistencia"&&esAlertaTelefonica(a)?`<div class="alert-badge">⚠ Alerta de retiro: ${escapeHtml(textoAlertaTelefonica(a))}</div>`:"";document.getElementById("listaRegistros").innerHTML=alerta+(registros.length?registros.map(x=>`<div class="registro-item"><strong>${escapeHtml(x.fecha||"Sin fecha")}</strong>${x.tipo==="Inasistencia"?`<button type="button" class="tipo ina ver-comprobante" data-comprobante-id="${escapeAttr(x.id)}" title="Ver datos del comprobante">Inasistencia</button>`:`<span class="tipo ${x.clase}">${x.tipo}${x.hora?" · "+escapeHtml(x.hora):""}</span>`}<span>${escapeHtml(x.comentario||"Sin motivo registrado")}</span><button class="btn-danger" onclick="borrarRegistro('${escapeAttr(x.id)}','${x.tipo}','${escapeAttr(alumnoId)}','${filtroTipo}')">Borrar</button></div>`).join(""): `<div class="empty">No hay ${filtroTipo==="atraso"?"atrasos":"inasistencias"} para este alumno.</div>`);document.getElementById("modalRegistros").style.display="flex"}
 async function borrarRegistro(id,tipo,alumnoId,filtroTipo){if(!confirm("¿Borrar este registro?"))return;await postData({action:"borrarRegistro",id,tipo});alerta("Registro borrado.");await cargarDatos(true);mostrarRegistros(alumnoId,filtroTipo)}
