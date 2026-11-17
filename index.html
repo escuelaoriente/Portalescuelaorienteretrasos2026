@@ -1367,6 +1367,16 @@ function actualizarAlumnosCitacion(){
 function seleccionarAlumnoCitacion(){
   const id=document.getElementById("citacionAlumnoSelector")?.value||"";
   const alumno=buscarAlumno(id);
+  // Si el alumno se selecciona sin curso, completar automáticamente el curso registrado.
+  if(alumno?.curso){
+    const cursoSelect=document.getElementById("citacionCurso");
+    if(cursoSelect && cursoSelect.value!==alumno.curso){
+      cursoSelect.value=alumno.curso;
+      actualizarAlumnosCitacion();
+      cursoSelect.value=alumno.curso;
+      document.getElementById("citacionAlumnoSelector").value=alumno.id;
+    }
+  }
   document.getElementById("citacionAlumno").value=alumno?.nombre||"";
   document.getElementById("citacionAlumnoBusqueda").value=alumno?.nombre||"";
   document.getElementById("citacionFormPanel").hidden=!alumno;
@@ -1381,7 +1391,10 @@ function seleccionarAlumnoCitacion(){
 function buscarAlumnoCitacion(){
   const texto=normalizar(document.getElementById("citacionAlumnoBusqueda")?.value||"");
   const curso=document.getElementById("citacionCurso")?.value||"";
-  const alumno=alumnosActivos().find(a=>(!curso||a.curso===curso)&&normalizar(a.nombre)===texto);
+  // La búsqueda por nombre también funciona con el curso vacío; al encontrarlo,
+  // seleccionarAlumnoCitacion completa el curso automáticamente.
+  const alumno=alumnosActivos().find(a=>(!curso||a.curso===curso)&&normalizar(a.nombre)===texto)
+    || (!curso ? alumnosActivos().find(a=>normalizar(a.nombre)===texto) : null);
   if(!alumno)return;
   document.getElementById("citacionAlumnoSelector").value=alumno.id;
   seleccionarAlumnoCitacion();
