@@ -792,7 +792,7 @@ tr:hover td {
     <div class="top-actions"><button class="btn-sec" onclick="volverInicio()">⬅ Volver al portal</button><h2>Registro de citación a apoderados</h2></div>
     <section class="summary-panel">
       <h3>Seleccione un curso y luego un alumno</h3>
-      <div class="form-grid"><select id="citacionCurso" onchange="actualizarAlumnosCitacion()"><option value="">Seleccione un curso</option></select><select id="citacionAlumnoSelector" onchange="seleccionarAlumnoCitacion()"><option value="">Seleccione un alumno</option></select></div>
+      <div class="form-grid"><select id="citacionCurso" onchange="actualizarAlumnosCitacion()"><option value="">Seleccione un curso</option></select><select id="citacionAlumnoSelector" onchange="seleccionarAlumnoCitacion()"><option value="">Seleccione un alumno</option></select><label style="grid-column:1 / -1">Escribir o buscar alumno<input id="citacionAlumnoBusqueda" list="citacionAlumnosLista" placeholder="Escriba el nombre del alumno" oninput="buscarAlumnoCitacion()"><datalist id="citacionAlumnosLista"></datalist></label></div>
     </section>
     <section class="summary-panel" id="citacionFormPanel" hidden>
       <h3>Datos de la citación</h3>
@@ -1307,6 +1307,7 @@ async function guardarCitacion(){
     estadoCitacion("Citación guardada en Firebase.","done");
     ["citacionApoderado","citacionAlumno","citacionProfesor","citacionFecha","citacionHora","citacionMotivo","citacionObservaciones"].forEach(id=>document.getElementById(id).value="");
     document.getElementById("citacionAlumnoSelector").value="";
+    document.getElementById("citacionAlumnoBusqueda").value="";
     document.getElementById("citacionFormPanel").hidden=true;
     await cargarDatos(true);
     renderCitaciones();
@@ -1360,12 +1361,14 @@ function actualizarAlumnosCitacion(){
   if(!select)return;
   const alumnos=alumnosActivos().filter(a=>!curso||a.curso===curso).sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),'es'));
   select.innerHTML='<option value="">Seleccione un alumno</option>'+alumnos.map(a=>`<option value="${escapeAttr(a.id)}">${escapeHtml(a.nombre)}</option>`).join("");
+  document.getElementById("citacionAlumnosLista").innerHTML=alumnos.map(a=>`<option value="${escapeHtml(a.nombre)}" data-id="${escapeAttr(a.id)}"></option>`).join("");
 }
 
 function seleccionarAlumnoCitacion(){
   const id=document.getElementById("citacionAlumnoSelector")?.value||"";
   const alumno=buscarAlumno(id);
   document.getElementById("citacionAlumno").value=alumno?.nombre||"";
+  document.getElementById("citacionAlumnoBusqueda").value=alumno?.nombre||"";
   document.getElementById("citacionFormPanel").hidden=!alumno;
   if(alumno){
     const apoderado=document.getElementById("citacionApoderado");
@@ -1373,6 +1376,15 @@ function seleccionarAlumnoCitacion(){
     document.getElementById("citacionFecha").value ||= new Date().toISOString().slice(0,10);
     document.getElementById("citacionHora").value ||= new Date().toTimeString().slice(0,5);
   }
+}
+
+function buscarAlumnoCitacion(){
+  const texto=normalizar(document.getElementById("citacionAlumnoBusqueda")?.value||"");
+  const curso=document.getElementById("citacionCurso")?.value||"";
+  const alumno=alumnosActivos().find(a=>(!curso||a.curso===curso)&&normalizar(a.nombre)===texto);
+  if(!alumno)return;
+  document.getElementById("citacionAlumnoSelector").value=alumno.id;
+  seleccionarAlumnoCitacion();
 }
 
 function renderCursos() {
