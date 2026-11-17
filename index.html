@@ -513,6 +513,8 @@ tr:hover td {
 }
 .modal {
   width:min(760px,100%);
+  max-height:calc(100vh - 36px);
+  overflow-y:auto;
   background:white;
   border-radius:22px;
   padding:18px;
@@ -522,6 +524,7 @@ tr:hover td {
   margin:0 0 12px;
   color:var(--azul);
 }
+.modal-bg{overflow-y:auto}
 .modal-grid {
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -1536,19 +1539,20 @@ async function guardarRegistroForm(){
   if(!a)return alerta("No se encontró el alumno.","error");
   estadoRegistro("Guardando inasistencia o atraso en Firebase…","saving");
   const fecha=valor("registroFormFecha"), comentario=valor("registroFormMotivo"), hora=valor("registroFormHora"), registradoPor=valor("registradoPor");
-  if(!fecha){estadoRegistro("Seleccione una fecha.","error");return alerta("Seleccione una fecha.","error");}
+  // Todos los campos son opcionales; los que no se completen se guardan vacíos.
   const conocimiento={};
   if(tipo==="inasistencia"){
     conocimiento.asistenteConocimiento=valor("registroFormAsistente");
     conocimiento.apoderadoTutorConocimiento=valor("registroFormApoderadoTutor");
     conocimiento.fechaConocimiento=valor("registroFormFechaConocimiento");
     conocimiento.horaConocimiento=valor("registroFormHoraConocimiento");
-    if(!conocimiento.asistenteConocimiento || !conocimiento.apoderadoTutorConocimiento || !conocimiento.fechaConocimiento || !conocimiento.horaConocimiento)
-      estadoRegistro("Complete los datos de recepción.","error");return alerta("Complete el inspector o asistente, el apoderado o tutor, la fecha y la hora de recepción.","error");
   }
   const action=tipo==="inasistencia"?"registrarInasistencia":"registrarAtraso";
   try {
-    await postData({action,alumnoId,curso:a.curso,nombre:a.nombre,fecha,hora,comentario,registradoPor,...conocimiento});
+    await Promise.race([
+      postData({action,alumnoId,curso:a.curso,nombre:a.nombre,fecha,hora,comentario,registradoPor,...conocimiento}),
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error("Firebase no respondió en 20 segundos")),20000))
+    ]);
     estadoRegistro(tipo==="inasistencia"?"Inasistencia guardada en Firebase.":"Atraso guardado en Firebase.","done");
     cerrarRegistroForm();
     alerta(tipo==="inasistencia"?"Inasistencia registrada.":"Atraso registrado.");
@@ -1568,10 +1572,6 @@ async function registrarFecha(alumnoId, tipo) {
   const inputId = tipo === "inasistencia" ? "ina_" + alumnoId : "atr_" + alumnoId;
   const fecha = document.getElementById(inputId).value;
   const registradoPor = document.getElementById("registradoPor").value.trim();
-
-  if (!fecha) {
-    return alerta("Seleccione una fecha.", "error");
-  }
 
   const comentario = prompt(tipo === "inasistencia" ? "Motivo de la inasistencia:" : "Motivo del atraso:", "") || "";
   const hora = tipo === "atraso" ? (prompt("Hora del atraso (HH:MM):", new Date().toLocaleTimeString("es-CL", {hour:"2-digit", minute:"2-digit"})) || "") : "";
