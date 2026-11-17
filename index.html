@@ -1050,6 +1050,11 @@ async function cargarColeccion(nombre) {
 }
 
 async function siguienteId(nombre) {
+  // Los registros nuevos usan un ID único y no necesitan leer toda la colección.
+  // Esto evita una consulta completa cada vez que se guarda una citación, atraso o inasistencia.
+  if (nombre !== "alumnos") {
+    return `${nombre.slice(0,3).toUpperCase()}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
+  }
   const snap = await db.collection(nombre).get();
   let max = 0;
   snap.forEach(doc => {
@@ -1076,12 +1081,18 @@ async function cargarDatos(force=false) {
   try {
     iniciarFirebase();
 
-    const [alumnos, inasistencias, atrasos, comentarios, citaciones] = await Promise.all([
-      cargarColeccion("alumnos"),
-      cargarColeccion("inasistencias"),
-      cargarColeccion("atrasos"),
-      cargarColeccion("comentarios"),
-      cargarColeccion("citaciones")
+    const [alumnos, inasistencias, atrasos, comentarios, citaciones] = await Promise.race([
+      Promise.all([
+        cargarColeccion("alumnos"),
+        cargarColeccion("inasistencias"),
+        cargarColeccion("atrasos"),
+        cargarColeccion("comentarios"),
+        cargarColeccion("citaciones").catch(error=>{
+          console.warn("No se pudo cargar citaciones:", error);
+          return [];
+        })
+      ]),
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error("La base de datos está tardando más de 20 segundos")),20000))
     ]);
 
     estado.alumnos = ordenarPorCampo(alumnos, "curso", "nombre");
