@@ -1311,15 +1311,19 @@ async function guardarCitacion(){
   try{
     await Promise.race([postData(payload),new Promise((_,reject)=>setTimeout(()=>reject(new Error("Firebase no respondió en 20 segundos")),20000))]);
     estadoCitacion(citacionEditandoId?"Citación modificada en Firebase.":"Citación guardada en Firebase.","done");
-    citacionEditandoId="";
-    document.getElementById("btnGuardarCitacion").textContent="Guardar citación";
-    ["citacionApoderado","citacionAlumno","citacionProfesor","citacionFecha","citacionHora","citacionMotivo","citacionObservaciones"].forEach(id=>document.getElementById(id).value="");
-    document.getElementById("citacionAlumnoSelector").value="";
-    document.getElementById("citacionAlumnoBusqueda").value="";
-    document.getElementById("citacionFormPanel").hidden=true;
+    limpiarFormularioCitacion();
     await cargarDatos(true);
     renderCitaciones();
   }catch(error){estadoCitacion("No se pudo guardar: "+(error.message||error),"error");}
+}
+
+function limpiarFormularioCitacion(){
+  citacionEditandoId="";
+  ["citacionCurso","citacionAlumnoSelector","citacionAlumnoBusqueda","citacionApoderado","citacionAlumno","citacionProfesor","citacionFecha","citacionHora","citacionMotivo","citacionObservaciones"].forEach(id=>{const el=document.getElementById(id);if(el)el.value=""});
+  const medio=document.getElementById("citacionMedio"); if(medio)medio.value="Presencial";
+  const estadoCit=document.getElementById("citacionEstado"); if(estadoCit)estadoCit.value="Pendiente";
+  const panel=document.getElementById("citacionFormPanel"); if(panel)panel.hidden=true;
+  const boton=document.getElementById("btnGuardarCitacion"); if(boton)boton.textContent="Guardar citación";
 }
 
 function editarCitacion(id){
@@ -1339,7 +1343,7 @@ function editarCitacion(id){
 
 async function borrarCitacion(id){
   if(!confirm("¿Borrar esta citación?"))return;
-  try{await postData({action:"borrarCitacion",id});alerta("Citación borrada.");await cargarDatos(true);renderCitaciones();}
+  try{await postData({action:"borrarCitacion",id});limpiarFormularioCitacion();alerta("Citación borrada.");await cargarDatos(true);renderCitaciones();}
   catch(error){alerta("No se pudo borrar la citación: "+(error.message||error),"error");}
 }
 
