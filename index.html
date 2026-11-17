@@ -1189,7 +1189,7 @@ async function postData(payload) {
   }
 
   if (payload.action === "registrarCitacion") {
-    const id = await siguienteId("citaciones");
+    const id = `CIT-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
     await db.collection("citaciones").doc(id).set({
       id,
       curso: payload.curso || "",
