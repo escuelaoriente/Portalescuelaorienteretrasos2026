@@ -314,6 +314,7 @@ button:hover {
 .save-status{display:none;align-items:center;justify-content:center;gap:10px;margin-top:14px;padding:12px;border-radius:12px;background:#eaf8f0;color:#12633c;font-weight:900}
 .save-status.visible{display:flex}
 .save-status .spinner{border-color:rgba(18,99,60,.2);border-top-color:#16804a}
+.save-status.error{background:#fff0f0;color:#b42323}.save-status.done{background:#eaf8f0;color:#12633c}
 }
 .form-grid {
   display:grid;
@@ -924,7 +925,7 @@ tr:hover td {
 
 <div class="modal-bg" id="modalRegistros"><div class="modal"><div class="top-actions"><h2 id="registrosTitulo">Registros del alumno</h2><button class="btn-sec" onclick="cerrarRegistros()">Cerrar</button></div><div id="listaRegistros" class="registro-list"></div></div></div>
 <div class="modal-bg" id="modalComprobante" role="dialog" aria-modal="true" aria-labelledby="comprobanteTitulo"><div class="modal"><div class="top-actions"><h2 id="comprobanteTitulo">Detalle del comprobante de inasistencia</h2><button id="cerrarComprobante" class="btn-sec" onclick="cerrarDetalleComprobante()">Volver a registros</button></div><dl id="comprobanteDatos" class="comprobante-datos"></dl></div></div>
-<div class="modal-bg" id="modalRegistroForm"><div class="modal"><h2 id="registroFormTitulo">Registrar registro</h2><input type="hidden" id="registroFormAlumno"><input type="hidden" id="registroFormTipo"><label>Fecha<input type="date" id="registroFormFecha"></label><label id="registroHoraLabel" style="display:none;margin-top:10px">Hora<input type="time" id="registroFormHora"></label><label style="display:block;margin-top:10px">Motivo o justificación<textarea id="registroFormMotivo" placeholder="Escriba el motivo"></textarea></label><fieldset id="registroConocimiento" hidden style="margin:16px 0;padding:12px;border:1px solid var(--linea);border-radius:10px"><legend>Recepción del comprobante</legend><label>Nombre del inspector o asistente que lo recibió<input type="text" id="registroFormAsistente" maxlength="150" placeholder="Nombre y apellido"></label><label style="display:block;margin-top:10px">Nombre del apoderado o tutor que recepcionó la llamada<input type="text" id="registroFormApoderadoTutor" maxlength="150" placeholder="Nombre y apellido"></label><label style="display:block;margin-top:10px">Fecha de recepción<input type="date" id="registroFormFechaConocimiento"></label><label style="display:block;margin-top:10px">Hora de recepción<input type="time" id="registroFormHoraConocimiento"></label></fieldset><div class="modal-actions"><button class="btn-sec" onclick="cerrarRegistroForm()">Cancelar</button><button onclick="guardarRegistroForm()">Guardar registro</button></div></div></div>
+<div class="modal-bg" id="modalRegistroForm"><div class="modal"><h2 id="registroFormTitulo">Registrar registro</h2><input type="hidden" id="registroFormAlumno"><input type="hidden" id="registroFormTipo"><label>Fecha<input type="date" id="registroFormFecha"></label><label id="registroHoraLabel" style="display:none;margin-top:10px">Hora<input type="time" id="registroFormHora"></label><label style="display:block;margin-top:10px">Motivo o justificación<textarea id="registroFormMotivo" placeholder="Escriba el motivo"></textarea></label><fieldset id="registroConocimiento" hidden style="margin:16px 0;padding:12px;border:1px solid var(--linea);border-radius:10px"><legend>Recepción del comprobante</legend><label>Nombre del inspector o asistente que lo recibió<input type="text" id="registroFormAsistente" maxlength="150" placeholder="Nombre y apellido"></label><label style="display:block;margin-top:10px">Nombre del apoderado o tutor que recepcionó la llamada<input type="text" id="registroFormApoderadoTutor" maxlength="150" placeholder="Nombre y apellido"></label><label style="display:block;margin-top:10px">Fecha de recepción<input type="date" id="registroFormFechaConocimiento"></label><label style="display:block;margin-top:10px">Hora de recepción<input type="time" id="registroFormHoraConocimiento"></label></fieldset><div id="estadoGuardarRegistro" class="save-status" role="status" aria-live="polite"></div><div class="modal-actions"><button class="btn-sec" onclick="cerrarRegistroForm()">Cancelar</button><button id="btnGuardarRegistro" onclick="guardarRegistroForm()">Guardar registro</button></div></div></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
@@ -1523,14 +1524,19 @@ document.getElementById("registroFormAsistente").value="";
 document.getElementById("registroFormApoderadoTutor").value="";
 document.getElementById("registroFormFechaConocimiento").value=partes.year+'-'+partes.month+'-'+partes.day;
 document.getElementById("registroFormHoraConocimiento").value=partes.hour+':'+partes.minute;
+document.getElementById("estadoGuardarRegistro").className="save-status";
+document.getElementById("estadoGuardarRegistro").textContent="";
+document.getElementById("btnGuardarRegistro").disabled=false;
 document.getElementById("modalRegistroForm").style.display="flex"}
 function cerrarRegistroForm(){document.getElementById("modalRegistroForm").style.display="none"}
+function estadoRegistro(mensaje,tipo){const box=document.getElementById("estadoGuardarRegistro"),button=document.getElementById("btnGuardarRegistro");box.className="save-status visible "+(tipo||"");box.innerHTML=tipo==="saving"?`<span class="spinner"></span>${escapeHtml(mensaje)}`:(tipo==="done"?`✓ ${escapeHtml(mensaje)}`:`⚠ ${escapeHtml(mensaje)}`);if(button)button.disabled=tipo==="saving";}
 async function guardarRegistroForm(){
   const valor=id=>document.getElementById(id).value.trim();
   const alumnoId=valor("registroFormAlumno"), tipo=valor("registroFormTipo"), a=buscarAlumno(alumnoId);
   if(!a)return alerta("No se encontró el alumno.","error");
+  estadoRegistro("Guardando inasistencia o atraso en Firebase…","saving");
   const fecha=valor("registroFormFecha"), comentario=valor("registroFormMotivo"), hora=valor("registroFormHora"), registradoPor=valor("registradoPor");
-  if(!fecha)return alerta("Seleccione una fecha.","error");
+  if(!fecha){estadoRegistro("Seleccione una fecha.","error");return alerta("Seleccione una fecha.","error");}
   const conocimiento={};
   if(tipo==="inasistencia"){
     conocimiento.asistenteConocimiento=valor("registroFormAsistente");
@@ -1538,15 +1544,17 @@ async function guardarRegistroForm(){
     conocimiento.fechaConocimiento=valor("registroFormFechaConocimiento");
     conocimiento.horaConocimiento=valor("registroFormHoraConocimiento");
     if(!conocimiento.asistenteConocimiento || !conocimiento.apoderadoTutorConocimiento || !conocimiento.fechaConocimiento || !conocimiento.horaConocimiento)
-      return alerta("Complete el inspector o asistente, el apoderado o tutor, la fecha y la hora de recepción.","error");
+      estadoRegistro("Complete los datos de recepción.","error");return alerta("Complete el inspector o asistente, el apoderado o tutor, la fecha y la hora de recepción.","error");
   }
   const action=tipo==="inasistencia"?"registrarInasistencia":"registrarAtraso";
   try {
     await postData({action,alumnoId,curso:a.curso,nombre:a.nombre,fecha,hora,comentario,registradoPor,...conocimiento});
+    estadoRegistro(tipo==="inasistencia"?"Inasistencia guardada en Firebase.":"Atraso guardado en Firebase.","done");
     cerrarRegistroForm();
     alerta(tipo==="inasistencia"?"Inasistencia registrada.":"Atraso registrado.");
     await cargarDatos(true);
   } catch(error) {
+    estadoRegistro("No se pudo guardar: "+(error.message||error),"error");
     alerta("No se pudo guardar el registro. Intente nuevamente.","error");
   }
 }
