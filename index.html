@@ -791,9 +791,10 @@ tr:hover td {
   <section class="view" id="citacionesView">
     <div class="top-actions"><button class="btn-sec" onclick="volverInicio()">⬅ Volver al portal</button><h2>Registro de citación a apoderados</h2></div>
     <div class="toolbar" style="margin-bottom:14px"><button id="tabRegistrarCitacion" onclick="mostrarVistaCitaciones('registrar')">Registrar citación</button><button id="tabVerCitaciones" class="btn-sec" onclick="mostrarVistaCitaciones('ver')">Ver citaciones</button></div>
+    <div id="registrarCitacionPanel">
     <section class="summary-panel">
       <h3>Seleccione un curso y luego un alumno</h3>
-      <div class="form-grid"><select id="citacionCurso" onchange="actualizarAlumnosCitacion()"><option value="">Seleccione un curso</option></select><select id="citacionAlumnoSelector" onchange="seleccionarAlumnoCitacion()"><option value="">Seleccione un alumno</option></select><label style="grid-column:1 / -1">Escribir o buscar alumno<input id="citacionAlumnoBusqueda" list="citacionAlumnosLista" placeholder="Escriba el nombre del alumno" oninput="buscarAlumnoCitacion()"><datalist id="citacionAlumnosLista"></datalist></label></div>
+      <div class="form-grid"><select id="citacionCurso" onchange="actualizarAlumnosCitacion()"><option value="">Seleccione un curso</option></select><select id="citacionAlumnoSelector" onchange="seleccionarAlumnoCitacion()"><option value="">Seleccione un alumno</option></select><datalist id="citacionAlumnosLista"></datalist></div>
     </section>
     <section class="summary-panel" id="citacionFormPanel" hidden>
       <h3>Datos de la citación</h3>
@@ -818,7 +819,7 @@ tr:hover td {
       <div id="resultadoHistorialCitacion" class="save-status" style="margin-top:10px" aria-live="polite"></div>
       <div id="detalleHistorialCitacion" class="table-wrap" style="margin-top:12px;display:none"></div>
     </section>
-    <section class="summary-panel" style="margin-top:16px"><h3>Citaciones registradas</h3><div class="table-wrap"><table><thead><tr><th>Curso</th><th>Fecha</th><th>Hora</th><th>Alumno</th><th>Apoderado o tutor</th><th>Profesor</th><th>Estado</th><th>Motivo</th><th>Medio</th><th>Acciones</th></tr></thead><tbody id="tablaCitaciones"></tbody></table></div></section>
+    </div>
   </section>
 
   <section class="view" id="asistenciaView">
@@ -1305,9 +1306,8 @@ function renderHome() {
 
 function renderCitaciones(){
   const tbody=document.getElementById("tablaCitaciones");
-  if(!tbody)return;
   const rows=estado.citaciones||[];
-  tbody.innerHTML=rows.length?rows.map(x=>`<tr><td>${escapeHtml(x.curso||"Sin curso")}</td><td>${escapeHtml(x.fecha||"Sin fecha")}</td><td>${escapeHtml(x.hora||"Sin hora")}</td><td>${escapeHtml(x.alumno||"Sin alumno")}</td><td>${escapeHtml(x.apoderado||"Sin registro")}</td><td>${escapeHtml(x.profesor||"Sin registro")}</td><td>${escapeHtml(x.estado||"Pendiente")}</td><td>${escapeHtml(x.motivo||x.observaciones||"Sin detalle")}</td><td>${escapeHtml(x.medio||"Sin registro")}</td><td><button class="btn-sec" type="button" onclick="editarCitacion('${escapeAttr(x.id)}')">Modificar</button> <button class="btn-danger" type="button" onclick="borrarCitacion('${escapeAttr(x.id)}')">Borrar</button></td></tr>`).join(""):"<tr><td colspan=\"10\" class=\"empty\">No hay citaciones registradas.</td></tr>";
+  if(tbody)tbody.innerHTML=rows.length?rows.map(x=>`<tr><td>${escapeHtml(x.curso||"Sin curso")}</td><td>${escapeHtml(x.fecha||"Sin fecha")}</td><td>${escapeHtml(x.hora||"Sin hora")}</td><td>${escapeHtml(x.alumno||"Sin alumno")}</td><td>${escapeHtml(x.apoderado||"Sin registro")}</td><td>${escapeHtml(x.profesor||"Sin registro")}</td><td>${escapeHtml(x.estado||"Pendiente")}</td><td>${escapeHtml(x.motivo||x.observaciones||"Sin detalle")}</td><td>${escapeHtml(x.medio||"Sin registro")}</td><td><button class="btn-sec" type="button" onclick="editarCitacion('${escapeAttr(x.id)}')">Modificar</button> <button class="btn-danger" type="button" onclick="borrarCitacion('${escapeAttr(x.id)}')">Borrar</button></td></tr>`).join(""):"<tr><td colspan=\"10\" class=\"empty\">No hay citaciones registradas.</td></tr>";
   const lista=document.getElementById("historialAlumnosLista");
   if(lista)lista.innerHTML=alumnosActivos().sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),'es')).map(a=>`<option value="${escapeHtml(a.nombre)}"></option>`).join("");
   renderHistorialCitacionAlumno();
@@ -1327,14 +1327,16 @@ function renderHistorialCitacionAlumno(){
   box.textContent=`${nombre}: ${registros.length} citación${registros.length===1?"":"es"} de apoderado registrada${registros.length===1?"":"s"}.`;
   if(detalle){
     detalle.style.display="block";
-    detalle.innerHTML=registros.length?`<table><thead><tr><th>Fecha</th><th>Hora</th><th>Apoderado</th><th>Profesor</th><th>Estado</th><th>Motivo</th></tr></thead><tbody>${registros.slice().sort((a,b)=>String(b.fecha||"").localeCompare(String(a.fecha||""))).map(x=>`<tr><td>${escapeHtml(x.fecha||"Sin fecha")}</td><td>${escapeHtml(x.hora||"Sin hora")}</td><td>${escapeHtml(x.apoderado||"Sin registro")}</td><td>${escapeHtml(x.profesor||"Sin registro")}</td><td>${escapeHtml(x.estado||"Pendiente")}</td><td>${escapeHtml(x.motivo||x.observaciones||"Sin detalle")}</td></tr>`).join("")}</tbody></table>`:`<div class="empty">No hay citaciones para este alumno.</div>`;
+    detalle.innerHTML=registros.length?`<table><thead><tr><th>Fecha</th><th>Hora</th><th>Apoderado</th><th>Profesor</th><th>Estado</th><th>Motivo</th><th>Acciones</th></tr></thead><tbody>${registros.slice().sort((a,b)=>String(b.fecha||"").localeCompare(String(a.fecha||""))).map(x=>`<tr><td>${escapeHtml(x.fecha||"Sin fecha")}</td><td>${escapeHtml(x.hora||"Sin hora")}</td><td>${escapeHtml(x.apoderado||"Sin registro")}</td><td>${escapeHtml(x.profesor||"Sin registro")}</td><td>${escapeHtml(x.estado||"Pendiente")}</td><td>${escapeHtml(x.motivo||x.observaciones||"Sin detalle")}</td><td><button class="btn-sec" type="button" onclick="editarCitacion('${escapeAttr(x.id)}')">Modificar</button> <button class="btn-danger" type="button" onclick="borrarCitacion('${escapeAttr(x.id)}')">Borrar</button></td></tr>`).join("")}</tbody></table>`:`<div class="empty">No hay citaciones para este alumno.</div>`;
   }
 }
 
 function mostrarVistaCitaciones(vista){
   const panel=document.getElementById("verCitacionesPanel");
+  const registrar=document.getElementById("registrarCitacionPanel");
   const ver=vista==="ver";
   if(panel)panel.style.display=ver?"block":"none";
+  if(registrar)registrar.style.display=ver?"none":"block";
   const btnVer=document.getElementById("tabVerCitaciones");
   const btnReg=document.getElementById("tabRegistrarCitacion");
   if(btnVer)btnVer.className=ver?"":"btn-sec";
@@ -1369,13 +1371,14 @@ function limpiarFormularioCitacion(){
 function editarCitacion(id){
   const x=(estado.citaciones||[]).find(r=>String(r.id)===String(id));
   if(!x)return;
+  mostrarVistaCitaciones("registrar");
   citacionEditandoId=String(id);
   document.getElementById("citacionCurso").value=x.curso||"";
   actualizarAlumnosCitacion();
   ["Apoderado","Alumno","Profesor","Fecha","Hora","Motivo","Observaciones"].forEach(k=>{const el=document.getElementById("citacion"+k);if(el)el.value=x[k.toLowerCase()]||""});
   document.getElementById("citacionMedio").value=x.medio||"Presencial";
   document.getElementById("citacionEstado").value=x.estado||"Pendiente";
-  document.getElementById("citacionAlumnoBusqueda").value=x.alumno||"";
+  const busqueda=document.getElementById("citacionAlumnoBusqueda"); if(busqueda)busqueda.value=x.alumno||"";
   document.getElementById("citacionFormPanel").hidden=false;
   document.getElementById("btnGuardarCitacion").textContent="Guardar cambios";
   document.getElementById("citacionFormPanel").scrollIntoView({behavior:"smooth",block:"start"});
@@ -1451,7 +1454,7 @@ function seleccionarAlumnoCitacion(){
     }
   }
   document.getElementById("citacionAlumno").value=alumno?.nombre||"";
-  document.getElementById("citacionAlumnoBusqueda").value=alumno?.nombre||"";
+  const busqueda=document.getElementById("citacionAlumnoBusqueda"); if(busqueda)busqueda.value=alumno?.nombre||"";
   document.getElementById("citacionFormPanel").hidden=!alumno;
   if(alumno){
     actualizarContadorCitaciones(alumno.nombre);
